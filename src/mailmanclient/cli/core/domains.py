@@ -14,6 +14,36 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
+from urllib2 import HTTPError
+from mailmanclient import Client
+
 
 class Domains():
-    pass
+
+    """Domain related actions."""
+
+    def connect(self, host, port, username, password):
+        self.client = Client('%s:%s/3.0' % (host, port), username, password)
+
+        # Tests if connection OK else raise exception
+        self.domains = self.client.domains
+
+    def create(self, domain_name, contact_address):
+        """Create a domain name with specified domain_name.
+           Optionally, the contact address can also be specified.
+
+           :param domain_name: Name of the domain
+           :param contact_address: Domain contact address
+        """
+
+        if domain_name is None:
+            print 'Specify domain name'
+            exit(1)
+        try:
+            if contact_address is None:
+                self.client.create_domain(domain_name)
+            else:
+                self.client.create_domain(domain_name,
+                                          contact_address=contact_address)
+        except HTTPError:
+            print 'Domain already exists'

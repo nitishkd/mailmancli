@@ -17,6 +17,7 @@
 from argparse import ArgumentParser
 from mailmanclient._client import MailmanConnectionError
 from core.lists import Lists
+from core.domains import Domains
 
 
 class CmdParser():
@@ -32,7 +33,11 @@ class CmdParser():
                             choices=['create', 'delete', 'list'])
         parser.add_argument('-l', '--listname', help='Name of the list')
         parser.add_argument('-d', '--domainname', help='Name of the domain')
+        parser.add_argument('-c', '--contact',
+                            help='Contact address for domain')
         parser.add_argument('-u', '--username', help='Name of the user')
+        parser.add_argument('--ll', help='Long list', action='store_true')
+
         parser.add_argument('--host', help='REST API host address',
                             default='http://127.0.0.1')
         parser.add_argument('--port', help='REST API host port',
@@ -55,9 +60,22 @@ class CmdParser():
         if action == 'create':
             l.create(self.arguments['domainname'],
                      self.arguments['listname'])
+        elif action == 'list':
+            l.list(self.arguments['domainname'], self.arguments['ll'])
 
     def operate_domain(self):
-        print "Operate Domains"
+        d = Domains()
+        try:
+            d.connect(host=self.arguments['host'], port=self.arguments['port'],
+                      username=self.arguments['restuser'],
+                      password=self.arguments['restpass'])
+        except MailmanConnectionError:
+            print 'Connection to REST API failed'
+            exit(1)
+        action = self.arguments['action']
+        if action == 'create':
+            d.create(self.arguments['domainname'],
+                     self.arguments['contact'])
 
     def run(self):
         method_name = 'operate_' + self.arguments['instance']
