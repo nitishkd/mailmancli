@@ -1,0 +1,69 @@
+Initialization
+==============
+
+The CLI can be started by running ./mmclient [options|arguments]
+
+If the mmclient is run without any arguments, the shell
+is started, else the specified action is performed. Use EOF
+to exit the shell.
+
+    $./mmclient 
+    Mailman Command Line Interface v1.0
+    >>>
+    Bye!
+
+    $./mmclient [options]
+
+Domains
+=======
+
+This section describes the domain related functions that can be performed
+with the CLI.
+
+To create a new domain,
+
+    $./mmclient domain create --domainname testdomain.org
+    $./mmclient domain create -d example.org
+
+Mailing List
+============
+
+This section describes the mailing list related function that can be 
+performed with the CLI.
+
+To create a mailing list,
+
+    $./mmclient list create --domainname testdomain.org --listname list1
+    $./mmclient list create -d testdomain.org -l list1
+
+To list the mailing lists, you can use `list list` command.
+The list functionality takes an optional parameter `domainname` 
+that can be used to filter the results.
+
+Further, a flag `ll` can also be used to print a detailed listing.
+
+    $./mmclient list list
+    list1
+    list2
+    list3
+    test1
+    hello
+
+    $./mmclient list list -d domain.org
+    list1
+    list2
+    list3
+    test1
+
+    $./mmclient list list --ll
+    ID                    Name    Mail host       Display Name    FQDN
+    list1.domain.org      list1   domain.org      List1           list1@domain.org
+    list2.domain.org      list2   domain.org      List2           list2@domain.org
+    list3.domain.org      list3   domain.org      List3           list3@domain.org
+    test1.domain.org      test1   domain.org      Test1           test1@domain.org
+    hello.testdomain.org  hello   testdomain.org  Hello           hello@testdomain.org
+
+    $./mmclient list list --ll -d testdomain.org
+    ID                    Name    Mail host       Display Name    FQDN
+    hello.testdomain.org  hello   testdomain.org  Hello           hello@testdomain.org
+
