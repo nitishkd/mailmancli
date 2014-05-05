@@ -29,13 +29,14 @@ class Lists():
         # Tests if connection OK else raise exception
         self.lists = self.client.lists
 
-    def create(self, domain_name, list_name):
+    def create(self, args):
         """Create a mailing list with specified list_name
            in the domain specified by domain_name.
 
-           :param domain_name: Name of the domain
-           :param list_name: Name of the list
+           :param args: Commandline arguments
         """
+        domain_name = args['domainname']
+        list_name = args['listname']
 
         if domain_name is None or list_name is None:
             print 'Specify domain name and list name'
@@ -98,12 +99,13 @@ class Lists():
                     table.append([i.list_name])
         return table
 
-    def list(self, domain_name, longlist):
+    def list(self, args):
         """List the mailing lists in the system or under a domain.
 
-           :param domain_name: Name of the domain
-           :param longlist: Print a long list
+           :param args: Commandline arguments
         """
+        domain_name = args['domainname']
+        longlist = args['ll']
         table = self.get_listing(domain_name, longlist)
         headers = table[0]
         try:

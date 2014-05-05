@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
+from tabulate import tabulate
 from urllib2 import HTTPError
 from mailmanclient import Client
 
@@ -28,13 +29,14 @@ class Domains():
         # Tests if connection OK else raise exception
         self.domains = self.client.domains
 
-    def create(self, domain_name, contact_address):
+    def create(self, args):
         """Create a domain name with specified domain_name.
            Optionally, the contact address can also be specified.
 
-           :param domain_name: Name of the domain
-           :param contact_address: Domain contact address
+           :param args: Commandline arguments
         """
+        domain_name = args['domainname']
+        contact_address = args['contact']
 
         if domain_name is None:
             print 'Specify domain name'
@@ -47,3 +49,39 @@ class Domains():
                                           contact_address=contact_address)
         except HTTPError:
             print 'Domain already exists'
+
+    def get_listing(self, detailed):
+        """Returns list of domains, formatted for tabulation.
+
+           :param deatiled: Return domain details or not
+        """
+        table = []
+        if detailed:
+            headers = ['Base URL', 'Contact address', 'Mail host', 'URL host']
+            table.append(headers)
+            for i in self.domains:
+                row = []
+                row.append(i.base_url)
+                row.append(i.contact_address)
+                row.append(i.mail_host)
+                row.append(i.url_host)
+                table.append(row)
+        else:
+            table.append([])
+            for i in self.domains:
+                table.append([i.base_url])
+        return table
+
+    def list(self, args):
+        """List the domains in the system.
+
+           :param args: Commandline arguments
+        """
+        longlist = args['ll']
+        table = self.get_listing(longlist)
+        headers = table[0]
+        try:
+            table = table[1:]
+        except IndexError:
+            table = []
+        print tabulate(table, headers=headers, tablefmt='plain')

@@ -56,12 +56,9 @@ class CmdParser():
         except MailmanConnectionError:
             print 'Connection to REST API failed'
             exit(1)
-        action = self.arguments['action']
-        if action == 'create':
-            l.create(self.arguments['domainname'],
-                     self.arguments['listname'])
-        elif action == 'list':
-            l.list(self.arguments['domainname'], self.arguments['ll'])
+        action_name = self.arguments['action']
+        action = getattr(l, action_name)
+        action(self.arguments)
 
     def operate_domain(self):
         d = Domains()
@@ -72,10 +69,9 @@ class CmdParser():
         except MailmanConnectionError:
             print 'Connection to REST API failed'
             exit(1)
-        action = self.arguments['action']
-        if action == 'create':
-            d.create(self.arguments['domainname'],
-                     self.arguments['contact'])
+        action_name = self.arguments['action']
+        action = getattr(d, action_name)
+        action(self.arguments)
 
     def run(self):
         method_name = 'operate_' + self.arguments['instance']

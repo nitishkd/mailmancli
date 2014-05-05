@@ -14,6 +14,14 @@ to exit the shell.
 
     $./mmclient [options]
 
+If you have non-default login credentials, specify them with the
+following options
+
+    --host HOSTNAME       [defaults to http://127.0.0.1]
+    --port PORTNUMBER     [defaults to 8001]
+    --restuser USERNAME   [defaults to restadmin]
+    --restpass PASSWORD   [defaults to restpass]
+
 Domains
 =======
 
@@ -24,6 +32,14 @@ To create a new domain,
 
     $./mmclient domain create --domainname testdomain.org
     $./mmclient domain create -d example.org
+
+To list the domains in the system,
+    
+    $./mmclient domain list
+
+For a long listing
+    
+    $./mmclient domain list --ll
 
 Mailing List
 ============
@@ -37,33 +53,17 @@ To create a mailing list,
     $./mmclient list create -d testdomain.org -l list1
 
 To list the mailing lists, you can use `list list` command.
-The list functionality takes an optional parameter `domainname` 
-that can be used to filter the results.
+
+To display all mailing lists in the system, use
+
+    $./mmclient list list
+
+To display the lists under the domain `domain.org`
+
+    $./mmclient list list -d domain.org
 
 Further, a flag `ll` can also be used to print a detailed listing.
 
-    $./mmclient list list
-    list1
-    list2
-    list3
-    test1
-    hello
-
-    $./mmclient list list -d domain.org
-    list1
-    list2
-    list3
-    test1
-
     $./mmclient list list --ll
-    ID                    Name    Mail host       Display Name    FQDN
-    list1.domain.org      list1   domain.org      List1           list1@domain.org
-    list2.domain.org      list2   domain.org      List2           list2@domain.org
-    list3.domain.org      list3   domain.org      List3           list3@domain.org
-    test1.domain.org      test1   domain.org      Test1           test1@domain.org
-    hello.testdomain.org  hello   testdomain.org  Hello           hello@testdomain.org
-
-    $./mmclient list list --ll -d testdomain.org
-    ID                    Name    Mail host       Display Name    FQDN
-    hello.testdomain.org  hello   testdomain.org  Hello           hello@testdomain.org
+    $./mmclient list list --ll -d domain.org
 
