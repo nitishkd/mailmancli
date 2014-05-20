@@ -50,14 +50,19 @@ class Domains():
         except HTTPError:
             print 'Domain already exists'
 
-    def get_listing(self, detailed):
+    def get_listing(self, detailed, hide_header):
         """Returns list of domains, formatted for tabulation.
 
-           :param deatiled: Return domain details or not
+           :param detailed: Return domain details or not
+           :param hide_header: Hide header
         """
         table = []
         if detailed:
-            headers = ['Base URL', 'Contact address', 'Mail host', 'URL host']
+            if hide_header:
+                headers = []
+            else:
+                headers = ['Base URL', 'Contact address',
+                           'Mail host', 'URL host']
             table.append(headers)
             for i in self.domains:
                 row = []
@@ -78,7 +83,8 @@ class Domains():
            :param args: Commandline arguments
         """
         longlist = args['verbose']
-        table = self.get_listing(longlist)
+        hide_header = args['no_header']
+        table = self.get_listing(longlist, hide_header)
         headers = table[0]
         try:
             table = table[1:]

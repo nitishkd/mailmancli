@@ -42,12 +42,18 @@ class CmdParser():
                                '--verbose',
                                help='Detailed listing',
                                action='store_true')
+        show_list.add_argument('--no-header',
+                               help='Omit headings in detailed listing',
+                               action='store_true')
 
         # Show domains
         show_domain = scope.add_parser('domain')
         show_domain.add_argument('-v',
                                  '--verbose',
                                  help='Detailed listing',
+                                 action='store_true')
+        show_domain.add_argument('--no-header',
+                                 help='Omit headings in detailed listing',
                                  action='store_true')
 
         # Parser for the action `create`
@@ -56,20 +62,15 @@ class CmdParser():
 
         # Create list
         create_list = scope.add_parser('list')
-        create_list.add_argument('-d',
-                                 '--domain',
-                                 help='Create list in DOMAIN')
-        create_list.add_argument('-l',
-                                 '--list',
-                                 help='List name')
+        create_list.add_argument('list',
+                                 help='List name. e.g., list@domain.org')
         # Create domain
         create_domain = scope.add_parser('domain')
-        create_domain.add_argument('-d',
-                                   '--domain',
+        create_domain.add_argument('domain',
                                    help='Create domain DOMAIN')
         create_domain.add_argument('--contact',
                                    help='Contact address for domain')
-
+        # Global options
         parser.add_argument('--host', help='REST API host address',
                             default='http://127.0.0.1')
         parser.add_argument('--port', help='REST API host port',

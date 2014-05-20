@@ -35,8 +35,9 @@ class Lists():
 
            :param args: Commandline arguments
         """
-        domain_name = args['domain']
-        list_name = args['list']
+        name = args['list'].split('@')
+        list_name = name[0]
+        domain_name = name[1]
 
         if domain_name is None or list_name is None:
             print 'Specify domain name and list name'
@@ -51,15 +52,19 @@ class Lists():
         except HTTPError:
             print 'Mailing list already exists'
 
-    def get_listing(self, domain, detailed):
+    def get_listing(self, domain, detailed, hide_header):
         """Returns list of mailing lists, formatted for tabulation.
 
             :param domain: Domain name
-            :param deatiled: Return list details or not
+            :param detailed: Return list details or not
+            :param hide_header: Remove header
         """
         table = []
         if detailed:
-            headers = ['ID', 'Name', 'Mail host', 'Display Name', 'FQDN']
+            if hide_header:
+                headers = []
+            else:
+                headers = ['ID', 'Name', 'Mail host', 'Display Name', 'FQDN']
             table.append(headers)
             if domain is not None:
                 try:
@@ -106,7 +111,8 @@ class Lists():
         """
         domain_name = args['domain']
         longlist = args['verbose']
-        table = self.get_listing(domain_name, longlist)
+        hide_header = args['no_header']
+        table = self.get_listing(domain_name, longlist, hide_header)
         headers = table[0]
         try:
             table = table[1:]
