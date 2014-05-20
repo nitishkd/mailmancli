@@ -35,8 +35,8 @@ class Lists():
 
            :param args: Commandline arguments
         """
-        domain_name = args['domainname']
-        list_name = args['listname']
+        domain_name = args['domain']
+        list_name = args['list']
 
         if domain_name is None or list_name is None:
             print 'Specify domain name and list name'
@@ -99,13 +99,13 @@ class Lists():
                     table.append([i.list_name])
         return table
 
-    def list(self, args):
+    def show(self, args):
         """List the mailing lists in the system or under a domain.
 
            :param args: Commandline arguments
         """
-        domain_name = args['domainname']
-        longlist = args['ll']
+        domain_name = args['domain']
+        longlist = args['verbose']
         table = self.get_listing(domain_name, longlist)
         headers = table[0]
         try:

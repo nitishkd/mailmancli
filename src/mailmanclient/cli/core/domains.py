@@ -35,7 +35,7 @@ class Domains():
 
            :param args: Commandline arguments
         """
-        domain_name = args['domainname']
+        domain_name = args['domain']
         contact_address = args['contact']
 
         if domain_name is None:
@@ -72,12 +72,12 @@ class Domains():
                 table.append([i.base_url])
         return table
 
-    def list(self, args):
+    def show(self, args):
         """List the domains in the system.
 
            :param args: Commandline arguments
         """
-        longlist = args['ll']
+        longlist = args['verbose']
         table = self.get_listing(longlist)
         headers = table[0]
         try:

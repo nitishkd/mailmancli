@@ -30,16 +30,15 @@ with the CLI.
 
 To create a new domain,
 
-    $./mmclient domain create --domainname testdomain.org
-    $./mmclient domain create -d example.org
+    $./mmclient create domain --domain testdomain.org
 
 To list the domains in the system,
     
-    $./mmclient domain list
+    $./mmclient show domain
 
 For a long listing
     
-    $./mmclient domain list --ll
+    $./mmclient show domain --verbose
 
 Mailing List
 ============
@@ -49,21 +48,19 @@ performed with the CLI.
 
 To create a mailing list,
 
-    $./mmclient list create --domainname testdomain.org --listname list1
-    $./mmclient list create -d testdomain.org -l list1
+    $./mmclient create list --domain testdomain.org --list list1
 
-To list the mailing lists, you can use `list list` command.
+To list the mailing lists, you can use `show list` command.
 
 To display all mailing lists in the system, use
 
-    $./mmclient list list
+    $./mmclient show list
 
 To display the lists under the domain `domain.org`
 
-    $./mmclient list list -d domain.org
+    $./mmclient show list -d domain.org
 
-Further, a flag `ll` can also be used to print a detailed listing.
+Further, a switch -v/--verbose can also be used to print a detailed listing.
 
-    $./mmclient list list --ll
-    $./mmclient list list --ll -d domain.org
+    $./mmclient show list --verbose
 

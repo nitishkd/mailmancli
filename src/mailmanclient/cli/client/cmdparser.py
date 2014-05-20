@@ -27,16 +27,48 @@ class CmdParser():
         self.arguments = vars(parser.parse_args())
 
     def initialize_options(self, parser):
-        parser.add_argument('instance', help='Specify instance',
-                            choices=['list', 'domain', 'user'])
-        parser.add_argument('action', help='Specify an action',
-                            choices=['create', 'delete', 'list'])
-        parser.add_argument('-l', '--listname', help='Name of the list')
-        parser.add_argument('-d', '--domainname', help='Name of the domain')
-        parser.add_argument('-c', '--contact',
-                            help='Contact address for domain')
-        parser.add_argument('-u', '--username', help='Name of the user')
-        parser.add_argument('--ll', help='Long list', action='store_true')
+        action = parser.add_subparsers(dest='action')
+
+        # Parser for the action `show`
+        action_show = action.add_parser('show')
+        scope = action_show.add_subparsers(dest='scope')
+
+        # Show lists
+        show_list = scope.add_parser('list')
+        show_list.add_argument('-d',
+                               '--domain',
+                               help='Filter by DOMAIN')
+        show_list.add_argument('-v',
+                               '--verbose',
+                               help='Detailed listing',
+                               action='store_true')
+
+        # Show domains
+        show_domain = scope.add_parser('domain')
+        show_domain.add_argument('-v',
+                                 '--verbose',
+                                 help='Detailed listing',
+                                 action='store_true')
+
+        # Parser for the action `create`
+        action_create = action.add_parser('create')
+        scope = action_create.add_subparsers(dest='scope')
+
+        # Create list
+        create_list = scope.add_parser('list')
+        create_list.add_argument('-d',
+                                 '--domain',
+                                 help='Create list in DOMAIN')
+        create_list.add_argument('-l',
+                                 '--list',
+                                 help='List name')
+        # Create domain
+        create_domain = scope.add_parser('domain')
+        create_domain.add_argument('-d',
+                                   '--domain',
+                                   help='Create domain DOMAIN')
+        create_domain.add_argument('--contact',
+                                   help='Contact address for domain')
 
         parser.add_argument('--host', help='REST API host address',
                             default='http://127.0.0.1')
@@ -47,33 +79,35 @@ class CmdParser():
         parser.add_argument('--restpass', help='REST API password',
                             default='restpass')
 
-    def operate_list(self):
-        l = Lists()
+    def manage_list(self):
+        lists = Lists()
         try:
-            l.connect(host=self.arguments['host'], port=self.arguments['port'],
-                      username=self.arguments['restuser'],
-                      password=self.arguments['restpass'])
+            lists.connect(host=self.arguments['host'],
+                          port=self.arguments['port'],
+                          username=self.arguments['restuser'],
+                          password=self.arguments['restpass'])
         except MailmanConnectionError:
             print 'Connection to REST API failed'
             exit(1)
         action_name = self.arguments['action']
-        action = getattr(l, action_name)
+        action = getattr(lists, action_name)
         action(self.arguments)
 
-    def operate_domain(self):
-        d = Domains()
+    def manage_domain(self):
+        domains = Domains()
         try:
-            d.connect(host=self.arguments['host'], port=self.arguments['port'],
-                      username=self.arguments['restuser'],
-                      password=self.arguments['restpass'])
+            domains.connect(host=self.arguments['host'],
+                            port=self.arguments['port'],
+                            username=self.arguments['restuser'],
+                            password=self.arguments['restpass'])
         except MailmanConnectionError:
             print 'Connection to REST API failed'
             exit(1)
         action_name = self.arguments['action']
-        action = getattr(d, action_name)
+        action = getattr(domains, action_name)
         action(self.arguments)
 
     def run(self):
-        method_name = 'operate_' + self.arguments['instance']
+        method_name = 'manage_' + self.arguments['scope']
         method = getattr(self, method_name)
         method()
