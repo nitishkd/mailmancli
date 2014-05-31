@@ -19,48 +19,41 @@ from urllib2 import HTTPError
 from mailmanclient import Client
 from lib.utils import Colorizer
 
-
 colorize = Colorizer()
 
 
-class Lists():
+class Users():
 
-    """Mailing list related actions."""
+    """User related actions."""
 
     def connect(self, host, port, username, password):
         self.client = Client('%s:%s/3.0' % (host, port), username, password)
 
         # Tests if connection OK else raise exception
-        self.lists = self.client.lists
+        self.users = self.client.users
 
     def create(self, args):
-        """Create a mailing list with specified list_name
-           in the domain specified by domain_name.
+        """Create a user with specified email,
+           password and display name.
 
            :param args: Commandline arguments
         """
-        name = args['list'].split('@')
-        list_name = name[0]
-        domain_name = name[1]
+        email = args['email']
+        password = args['password']
+        display_name = args['name']
 
-        if domain_name is None or list_name is None:
-            colorize.error('Invalid list name')
-            exit(1)
         try:
-            domain = self.client.get_domain(domain_name)
+            self.client.create_user(email=email,
+                                    password=password,
+                                    display_name=display_name)
         except HTTPError:
-            colorize.error('Domain not found')
-            exit(1)
-        try:
-            domain.create_list(list_name)
-        except HTTPError:
-            colorize.error('Mailing list already exists')
+            colorize.error('User already exists')
 
-    def get_listing(self, domain, detailed, hide_header):
+    def get_listing(self, list_name, detailed, hide_header):
         """Returns list of mailing lists, formatted for tabulation.
 
-            :param domain: Domain name
-            :param detailed: Return list details or not
+            :param domain: list name
+            :param detailed: Return a detailed list or not
             :param hide_header: Remove header
         """
         table = []
@@ -68,55 +61,62 @@ class Lists():
             if hide_header:
                 headers = []
             else:
-                headers = ['ID', 'Name', 'Mail host', 'Display Name', 'FQDN']
+                headers = ['Display Name', 'Address', 'Created on', 'User ID']
             table.append(headers)
-            if domain is not None:
+            if list_name is not None:
                 try:
-                    domain = self.client.get_domain(domain)
+                    _list = self.client.get_list(list_name)
                 except HTTPError:
-                    colorize.error('Domain not found')
+                    colorize.error('List not found')
                     exit(1)
-                for i in domain.lists:
+                for member in _list.members:
                     row = []
-                    row.append(i.list_id)
-                    row.append(i.list_name)
-                    row.append(i.mail_host)
-                    row.append(i.display_name)
-                    row.append(i.fqdn_listname)
-                    table.append(row)
+                    try:
+                        row.append(member.user.display_name)
+                        row.append(str(member.user.addresses[0]))
+                        row.append(member.user.created_on)
+                        row.append(str(member.user.user_id))
+                        table.append(row)
+                    except:
+                        pass
             else:
-                for i in self.lists:
+                for user in self.users:
                     row = []
-                    row.append(i.list_id)
-                    row.append(i.list_name)
-                    row.append(i.mail_host)
-                    row.append(i.display_name)
-                    row.append(i.fqdn_listname)
-                    table.append(row)
+                    try:
+                        row.append(user.display_name)
+                        row.append(str(user.addresses[0]))
+                        row.append(user.created_on)
+                        row.append(str(user.user_id))
+                        table.append(row)
+                    except:
+                        pass
         else:
             table.append([])
-            if domain is not None:
+            if list_name is not None:
                 try:
-                    d = self.client.get_domain(domain)
+                    _list = self.client.get_list(list_name)
                 except HTTPError:
-                    colorize.error('Domain not found')
+                    colorize.error('List not found')
                     exit(1)
-                for i in d.lists:
-                    table.append([i.list_id])
+                for member in _list.members:
+                    table.append([str(member.user.addresses[0])])
             else:
-                for i in self.lists:
-                    table.append([i.list_id])
+                for user in self.users:
+                    try:
+                        table.append([str(user.addresses[0])])
+                    except:
+                        pass
         return table
 
     def show(self, args):
-        """List the mailing lists in the system or under a domain.
+        """List users in the system.
 
            :param args: Commandline arguments
         """
-        domain_name = args['domain']
         longlist = args['verbose']
         hide_header = args['no_header']
-        table = self.get_listing(domain_name, longlist, hide_header)
+        list_name = args['list_name']
+        table = self.get_listing(list_name, longlist, hide_header)
         headers = table[0]
         try:
             table = table[1:]
@@ -124,18 +124,14 @@ class Lists():
             table = []
         print tabulate(table, headers=headers, tablefmt='plain')
 
-    def list_members(self, list_name):
-        pass
-
     def delete(self, args):
         try:
-            _list = self.client.get_list(args['list'])
+            user = self.client.get_user(args['user'])
         except HTTPError:
-            colorize.error('Invalid list')
+            colorize.error('Invalid User')
             return
         if not args['yes']:
-            colorize.confirm('List %s has %d members.Delete?[y/n]'
-                             % (args['list'], len(_list.members)))
+            colorize.confirm('Delete user %s?[y/n]' % args['user'])
             confirm = raw_input()
             if confirm == 'y':
                 args['yes'] = True
@@ -144,4 +140,4 @@ class Lists():
             else:
                 colorize.error('Invalid answer')
                 return
-        _list.delete()
+        user.delete()

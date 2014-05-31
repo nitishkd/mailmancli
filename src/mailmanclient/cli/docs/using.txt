@@ -30,15 +30,33 @@ with the CLI.
 
 To create a new domain,
 
-    $./mmclient create domain --domain testdomain.org
+    $./mmclient create domain testdomain.org
 
 To list the domains in the system,
     
     $./mmclient show domain
+    http://domain.org
 
-For a long listing
+To obtain a detailed listing, use the `-v`/`--verbose` switch.
+The detailed listing of domains displays the domains as a table.
+
+    $./mmclient show domain -v
+    Base URL           Contact address        Mail host    URL host
+    http://domain.org  postmaster@domain.org  domain.org   domain.org
+
+In addition, the long listing has a `no-header` switch that can be used 
+to remove the header, making it more comfortable to pipe the output.
+
+    $./mmclient show domain -v --no-header
+    http://domain.org  postmaster@domain.org  domain.org   domain.org
+
+To delete a domain
+
+    $./mmclient delete domain domain.org
+
+To supress the confirmation message, do
     
-    $./mmclient show domain --verbose
+    $./mmclient delete domain domain.org --yes
 
 Mailing List
 ============
@@ -48,19 +66,71 @@ performed with the CLI.
 
 To create a mailing list,
 
-    $./mmclient create list --domain testdomain.org --list list1
+    $./mmclient create list list@domain.org
 
-To list the mailing lists, you can use `show list` command.
-
-To display all mailing lists in the system, use
+To display all mailing lists in the system
 
     $./mmclient show list
+    foo.domain.org
+    bar.example.org
+    
 
 To display the lists under the domain `domain.org`
 
     $./mmclient show list -d domain.org
+    foo.domain.org
 
 Further, a switch -v/--verbose can also be used to print a detailed listing.
 
     $./mmclient show list --verbose
+    ID               Name    Mail host    Display Name    FQDN
+    list.domain.org  list    domain.org   List            list@domain.org
 
+Again, the `show list` supports a `--no-header` switch that removes
+the header line of the long listing.
+
+    $./mmclient show list --verbose --no-header
+    list.domain.org  list    domain.org   List            list@domain.org
+
+To delete a list
+
+    $./mmclient delete list list@domain.org
+
+To supress the confirmation message, do
+    
+    $./mmclient delete list list@domain.org --yes
+User
+====
+
+To create a new user
+
+    $./mmclient create user foo@bar.com --name "Foo" --password "password"
+
+The `show user` command lists a single email ID of each user.
+
+    $./mmclient show user 
+    foo@bar.com
+
+To list users who are members of a list
+
+    $./mmclient show user --list list@domain.org
+    foo@bar.com
+
+The show command also supports a `--verbose` switch 
+
+    $./mmclient show user --verbose
+    Display Name    Address       Created on                                                  User ID
+    Foo             foo2@bar.com  2014-05-30T00:52:52.564634  220337223817757552725201672981303248133
+
+and a `--no-header` switch
+
+    $./mmclient show user --verbose --no-header
+    Foo             foo2@bar.com  2014-05-30T00:52:52.564634  220337223817757552725201672981303248133
+
+To delete a user
+
+    $./mmclient delete user foo@bar.com
+
+To supress the confirmation message, do
+    
+    $./mmclient delete user foo@bar.com --yes

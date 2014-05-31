@@ -17,6 +17,10 @@
 from tabulate import tabulate
 from urllib2 import HTTPError
 from mailmanclient import Client
+from lib.utils import Colorizer
+
+
+colorize = Colorizer()
 
 
 class Domains():
@@ -38,9 +42,6 @@ class Domains():
         domain_name = args['domain']
         contact_address = args['contact']
 
-        if domain_name is None:
-            print 'Specify domain name'
-            exit(1)
         try:
             if contact_address is None:
                 self.client.create_domain(domain_name)
@@ -48,7 +49,7 @@ class Domains():
                 self.client.create_domain(domain_name,
                                           contact_address=contact_address)
         except HTTPError:
-            print 'Domain already exists'
+            colorize.error('Domain already exists')
 
     def get_listing(self, detailed, hide_header):
         """Returns list of domains, formatted for tabulation.
@@ -91,3 +92,22 @@ class Domains():
         except IndexError:
             table = []
         print tabulate(table, headers=headers, tablefmt='plain')
+
+    def delete(self, args):
+        try:
+            domain = self.client.get_domain(args['domain'])
+        except HTTPError:
+            colorize.error('Invalid domain')
+            return
+        if not args['yes']:
+            colorize.confirm('Domain `%s` has %d lists.Delete?[y/n]'
+                             % (args['domain'], len(domain.lists)))
+            confirm = raw_input()
+            if confirm == 'y':
+                args['yes'] = True
+            elif confirm == 'n':
+                return
+            else:
+                colorize.error('Invalid answer')
+                return
+        self.client.delete_domain(args['domain'])

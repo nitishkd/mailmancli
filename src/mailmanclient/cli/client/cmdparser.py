@@ -18,6 +18,7 @@ from argparse import ArgumentParser
 from mailmanclient._client import MailmanConnectionError
 from core.lists import Lists
 from core.domains import Domains
+from core.users import Users
 
 
 class CmdParser():
@@ -56,6 +57,20 @@ class CmdParser():
                                  help='Omit headings in detailed listing',
                                  action='store_true')
 
+        # Show users
+        show_user = scope.add_parser('user')
+        show_user.add_argument('-v',
+                               '--verbose',
+                               help='Detailed listing',
+                               action='store_true')
+        show_user.add_argument('--no-header',
+                               help='Omit headings in detailed listing',
+                               action='store_true')
+        show_user.add_argument('-l',
+                               '--list',
+                               help='Specify list name',
+                               dest='list_name')
+
         # Parser for the action `create`
         action_create = action.add_parser('create')
         scope = action_create.add_subparsers(dest='scope')
@@ -70,6 +85,43 @@ class CmdParser():
                                    help='Create domain DOMAIN')
         create_domain.add_argument('--contact',
                                    help='Contact address for domain')
+        # Create users
+        create_user = scope.add_parser('user')
+        create_user.add_argument('email',
+                                 help='Create user foo@bar.com')
+        create_user.add_argument('--password',
+                                 help='User password',
+                                 required=True)
+        create_user.add_argument('--name',
+                                 help='Display name of the user',
+                                 required=True)
+
+        # Parser for the action `delete`
+        action_delete = action.add_parser('delete')
+        scope = action_delete.add_subparsers(dest='scope')
+
+        # Delete list
+        delete_list = scope.add_parser('list')
+        delete_list.add_argument('list',
+                                 help='List name. e.g., list@domain.org')
+        delete_list.add_argument('--yes',
+                                 help='Force delete',
+                                 action='store_true')
+        # Delete domain
+        delete_domain = scope.add_parser('domain')
+        delete_domain.add_argument('domain',
+                                   help='Domain name. e.g., domain.org')
+        delete_domain.add_argument('--yes',
+                                   help='Force delete',
+                                   action='store_true')
+        # Delete user
+        delete_user = scope.add_parser('user')
+        delete_user.add_argument('user',
+                                 help='User email e.g., foo@bar.com')
+        delete_user.add_argument('--yes',
+                                 help='Force delete',
+                                 action='store_true')
+
         # Global options
         parser.add_argument('--host', help='REST API host address',
                             default='http://127.0.0.1')
@@ -106,6 +158,20 @@ class CmdParser():
             exit(1)
         action_name = self.arguments['action']
         action = getattr(domains, action_name)
+        action(self.arguments)
+
+    def manage_user(self):
+        users = Users()
+        try:
+            users.connect(host=self.arguments['host'],
+                          port=self.arguments['port'],
+                          username=self.arguments['restuser'],
+                          password=self.arguments['restpass'])
+        except MailmanConnectionError:
+            print 'Connection to REST API failed'
+            exit(1)
+        action_name = self.arguments['action']
+        action = getattr(users, action_name)
         action(self.arguments)
 
     def run(self):
