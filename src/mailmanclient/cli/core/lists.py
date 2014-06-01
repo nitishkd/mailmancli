@@ -16,19 +16,24 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from mailmanclient import Client
 from lib.utils import Colorizer
+from core.domains import DomainException
 
 
 colorize = Colorizer()
+
+
+class ListException(Exception):
+    """ List Exceptions """
+    pass
 
 
 class Lists():
 
     """Mailing list related actions."""
 
-    def connect(self, host, port, username, password):
-        self.client = Client('%s:%s/3.0' % (host, port), username, password)
+    def __init__(self, client):
+        self. client = client
 
         # Tests if connection OK else raise exception
         self.lists = self.client.lists
@@ -44,17 +49,15 @@ class Lists():
         domain_name = name[1]
 
         if domain_name is None or list_name is None:
-            colorize.error('Invalid list name')
-            exit(1)
+            raise ListException('List not found')
         try:
             domain = self.client.get_domain(domain_name)
         except HTTPError:
-            colorize.error('Domain not found')
-            exit(1)
+            raise DomainException('Domain not found')
         try:
             domain.create_list(list_name)
         except HTTPError:
-            colorize.error('Mailing list already exists')
+            raise ListException('List already exists')
 
     def get_listing(self, domain, detailed, hide_header):
         """Returns list of mailing lists, formatted for tabulation.
@@ -74,8 +77,7 @@ class Lists():
                 try:
                     domain = self.client.get_domain(domain)
                 except HTTPError:
-                    colorize.error('Domain not found')
-                    exit(1)
+                    raise DomainException('Domain not found')
                 for i in domain.lists:
                     row = []
                     row.append(i.list_id)
@@ -99,8 +101,7 @@ class Lists():
                 try:
                     d = self.client.get_domain(domain)
                 except HTTPError:
-                    colorize.error('Domain not found')
-                    exit(1)
+                    raise DomainException('Domain not found')
                 for i in d.lists:
                     table.append([i.list_id])
             else:
@@ -131,8 +132,7 @@ class Lists():
         try:
             _list = self.client.get_list(args['list'])
         except HTTPError:
-            colorize.error('Invalid list')
-            return
+            raise ListException('List not found')
         if not args['yes']:
             colorize.confirm('List %s has %d members.Delete?[y/n]'
                              % (args['list'], len(_list.members)))
@@ -142,6 +142,5 @@ class Lists():
             elif confirm == 'n':
                 return
             else:
-                colorize.error('Invalid answer')
-                return
+                raise Exception('Invalid Answer')
         _list.delete()

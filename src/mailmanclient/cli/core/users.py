@@ -16,18 +16,23 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from mailmanclient import Client
 from lib.utils import Colorizer
+from core.lists import ListException
 
 colorize = Colorizer()
+
+
+class UserException(Exception):
+    """ User Exceptions """
+    pass
 
 
 class Users():
 
     """User related actions."""
 
-    def connect(self, host, port, username, password):
-        self.client = Client('%s:%s/3.0' % (host, port), username, password)
+    def __init__(self, client):
+        self.client = client
 
         # Tests if connection OK else raise exception
         self.users = self.client.users
@@ -47,7 +52,7 @@ class Users():
                                     password=password,
                                     display_name=display_name)
         except HTTPError:
-            colorize.error('User already exists')
+            raise UserException('User already exists')
 
     def get_listing(self, list_name, detailed, hide_header):
         """Returns list of mailing lists, formatted for tabulation.
@@ -67,8 +72,7 @@ class Users():
                 try:
                     _list = self.client.get_list(list_name)
                 except HTTPError:
-                    colorize.error('List not found')
-                    exit(1)
+                    raise ListException('List not found')
                 for member in _list.members:
                     row = []
                     try:
@@ -96,8 +100,7 @@ class Users():
                 try:
                     _list = self.client.get_list(list_name)
                 except HTTPError:
-                    colorize.error('List not found')
-                    exit(1)
+                    raise ListException('List not found')
                 for member in _list.members:
                     table.append([str(member.user.addresses[0])])
             else:
@@ -128,8 +131,7 @@ class Users():
         try:
             user = self.client.get_user(args['user'])
         except HTTPError:
-            colorize.error('Invalid User')
-            return
+            raise UserException('User not found')
         if not args['yes']:
             colorize.confirm('Delete user %s?[y/n]' % args['user'])
             confirm = raw_input()
@@ -138,6 +140,5 @@ class Users():
             elif confirm == 'n':
                 return
             else:
-                colorize.error('Invalid answer')
-                return
+                raise Exception('Invalid answer')
         user.delete()

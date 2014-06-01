@@ -15,10 +15,12 @@
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import ArgumentParser
-from mailmanclient._client import MailmanConnectionError
 from core.lists import Lists
-from core.domains import Domains
 from core.users import Users
+from lib.utils import Colorizer
+from core.domains import Domains
+from mailmanclient import Client
+from mailmanclient._client import MailmanConnectionError
 
 
 class CmdParser():
@@ -132,49 +134,46 @@ class CmdParser():
         parser.add_argument('--restpass', help='REST API password',
                             default='restpass')
 
-    def manage_list(self):
-        lists = Lists()
+    def manage_list(self, client):
         try:
-            lists.connect(host=self.arguments['host'],
-                          port=self.arguments['port'],
-                          username=self.arguments['restuser'],
-                          password=self.arguments['restpass'])
+            lists = Lists(client)
         except MailmanConnectionError:
-            print 'Connection to REST API failed'
-            exit(1)
+            raise Exception('Connection to REST API failed')
         action_name = self.arguments['action']
         action = getattr(lists, action_name)
         action(self.arguments)
 
-    def manage_domain(self):
-        domains = Domains()
+    def manage_domain(self, client):
         try:
-            domains.connect(host=self.arguments['host'],
-                            port=self.arguments['port'],
-                            username=self.arguments['restuser'],
-                            password=self.arguments['restpass'])
+            domains = Domains(client)
         except MailmanConnectionError:
-            print 'Connection to REST API failed'
-            exit(1)
+            raise Exception('Connection to REST API failed')
         action_name = self.arguments['action']
         action = getattr(domains, action_name)
         action(self.arguments)
 
-    def manage_user(self):
-        users = Users()
+    def manage_user(self, client):
         try:
-            users.connect(host=self.arguments['host'],
-                          port=self.arguments['port'],
-                          username=self.arguments['restuser'],
-                          password=self.arguments['restpass'])
+            users = Users(client)
         except MailmanConnectionError:
-            print 'Connection to REST API failed'
-            exit(1)
+            raise Exception('Connection to REST API failed')
         action_name = self.arguments['action']
         action = getattr(users, action_name)
         action(self.arguments)
 
     def run(self):
         method_name = 'manage_' + self.arguments['scope']
+        host = self.arguments['host']
+        port = self.arguments['port']
+        username = self.arguments['restuser']
+        password = self.arguments['restpass']
+        client = Client('%s:%s/3.0' % (host, port),
+                        username,
+                        password)
         method = getattr(self, method_name)
-        method()
+        try:
+            method(client)
+        except Exception as e:
+            colorize = Colorizer()
+            colorize.error(e)
+            exit(1)
