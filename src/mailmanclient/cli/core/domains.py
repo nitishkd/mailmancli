@@ -28,20 +28,20 @@ class DomainException(Exception):
 
 
 class Domains():
-
     """Domain related actions."""
 
     def __init__(self, client):
         self.client = client
 
         # Tests if connection OK else raise exception
-        self.domains = self.client.domains
+        domains = self.client.domains
 
     def create(self, args):
         """Create a domain name with specified domain_name.
            Optionally, the contact address can also be specified.
 
            :param args: Commandline arguments
+           :type args: dictionary
         """
         domain_name = args['domain']
         contact_address = args['contact']
@@ -59,8 +59,12 @@ class Domains():
         """Returns list of domains, formatted for tabulation.
 
            :param detailed: Return domain details or not
+           :type detailed: boolean
            :param hide_header: Hide header
+           :type hide_header: boolean
+           :rtype: Returns a table as a nested list
         """
+        domains = self.client.domains
         table = []
         if detailed:
             if hide_header:
@@ -69,7 +73,7 @@ class Domains():
                 headers = ['Base URL', 'Contact address',
                            'Mail host', 'URL host']
             table.append(headers)
-            for i in self.domains:
+            for i in domains:
                 row = []
                 row.append(i.base_url)
                 row.append(i.contact_address)
@@ -78,7 +82,7 @@ class Domains():
                 table.append(row)
         else:
             table.append([])
-            for i in self.domains:
+            for i in domains:
                 table.append([i.base_url])
         return table
 
@@ -86,6 +90,7 @@ class Domains():
         """List the domains in the system.
 
            :param args: Commandline arguments
+           :type args: dictionary
         """
         longlist = args['verbose']
         hide_header = args['no_header']

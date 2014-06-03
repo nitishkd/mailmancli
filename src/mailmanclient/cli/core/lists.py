@@ -36,20 +36,23 @@ class Lists():
         self. client = client
 
         # Tests if connection OK else raise exception
-        self.lists = self.client.lists
+        lists = self.client.lists
 
     def create(self, args):
         """Create a mailing list with specified list_name
            in the domain specified by domain_name.
 
            :param args: Commandline arguments
+           :type args: dictionary
         """
         name = args['list'].split('@')
-        list_name = name[0]
-        domain_name = name[1]
-
-        if domain_name is None or list_name is None:
-            raise ListException('List not found')
+        try:
+            list_name = name[0]
+            domain_name = name[1]
+        except IndexError:
+            raise ListException('Invalid FQDN list name')
+        if list_name.strip() == '' or domain_name.strip() == '':
+            raise ListException('Invalid FQDN list name')
         try:
             domain = self.client.get_domain(domain_name)
         except HTTPError:
@@ -63,9 +66,13 @@ class Lists():
         """Returns list of mailing lists, formatted for tabulation.
 
             :param domain: Domain name
+            :type domain: string
             :param detailed: Return list details or not
+            :type detailed: boolean
             :param hide_header: Remove header
+            :type hide_header: boolean
         """
+        lists = self.client.lists
         table = []
         if detailed:
             if hide_header:
@@ -87,7 +94,7 @@ class Lists():
                     row.append(i.fqdn_listname)
                     table.append(row)
             else:
-                for i in self.lists:
+                for i in lists:
                     row = []
                     row.append(i.list_id)
                     row.append(i.list_name)
@@ -105,7 +112,7 @@ class Lists():
                 for i in d.lists:
                     table.append([i.list_id])
             else:
-                for i in self.lists:
+                for i in lists:
                     table.append([i.list_id])
         return table
 
@@ -113,6 +120,7 @@ class Lists():
         """List the mailing lists in the system or under a domain.
 
            :param args: Commandline arguments
+           :type args: dictionary
         """
         domain_name = args['domain']
         longlist = args['verbose']

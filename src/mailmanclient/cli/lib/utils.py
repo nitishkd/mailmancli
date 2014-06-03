@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
+from hashlib import sha1
+from datetime import datetime
+
 
 class Colorizer():
     " Give colored output on the CLI"
@@ -28,3 +31,18 @@ class Colorizer():
 
     def confirm(self, message):
         print "\033[92m%s\033[0m" % message,
+
+
+class Utils(Colorizer):
+    """ General utilities to be used across the CLI """
+
+    def get_random_string(self, length):
+        """ Returns short random strings, less than 40 bytes in length.
+
+        :param length: Length of the random string to be returned
+        :type length: int
+        """
+        try:
+            return sha1(str(datetime.now())).hexdigest()[:length]
+        except IndexError:
+            raise Exception('Specify length less than 40')

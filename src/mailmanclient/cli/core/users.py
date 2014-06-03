@@ -35,13 +35,13 @@ class Users():
         self.client = client
 
         # Tests if connection OK else raise exception
-        self.users = self.client.users
+        users = self.client.users
 
     def create(self, args):
-        """Create a user with specified email,
-           password and display name.
+        """Create a user with specified email,password and display name.
 
            :param args: Commandline arguments
+           :type args: dictionary
         """
         email = args['email']
         password = args['password']
@@ -57,10 +57,15 @@ class Users():
     def get_listing(self, list_name, detailed, hide_header):
         """Returns list of mailing lists, formatted for tabulation.
 
-            :param domain: list name
+            :param list_name: Name of the list whose members are to be listed
+            :type list_name: string
             :param detailed: Return a detailed list or not
-            :param hide_header: Remove header
+            :type detailed: boolean
+            :param hide_header: Remove header of detailed listing
+            :type hide_header: boolean
+            :rtype: Returns a table in form of nested lists
         """
+        users = self.client.users
         table = []
         if detailed:
             if hide_header:
@@ -84,7 +89,7 @@ class Users():
                     except:
                         pass
             else:
-                for user in self.users:
+                for user in users:
                     row = []
                     try:
                         row.append(user.display_name)
@@ -104,7 +109,7 @@ class Users():
                 for member in _list.members:
                     table.append([str(member.user.addresses[0])])
             else:
-                for user in self.users:
+                for user in users:
                     try:
                         table.append([str(user.addresses[0])])
                     except:
@@ -115,6 +120,7 @@ class Users():
         """List users in the system.
 
            :param args: Commandline arguments
+           :type args: dictionary
         """
         longlist = args['verbose']
         hide_header = args['no_header']
