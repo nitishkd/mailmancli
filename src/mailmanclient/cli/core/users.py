@@ -36,6 +36,7 @@ class Users():
 
         # Tests if connection OK else raise exception
         users = self.client.users
+        del users
 
     def create(self, args):
         """Create a user with specified email,password and display name.
@@ -54,7 +55,7 @@ class Users():
         except HTTPError:
             raise UserException('User already exists')
 
-    def get_listing(self, list_name, detailed, hide_header):
+    def getusering(self, list_name, detailed, hide_header):
         """Returns list of mailing lists, formatted for tabulation.
 
             :param list_name: Name of the list whose members are to be listed
@@ -75,10 +76,10 @@ class Users():
             table.append(headers)
             if list_name is not None:
                 try:
-                    _list = self.client.get_list(list_name)
+                    user = self.client.get_list(list_name)
                 except HTTPError:
                     raise ListException('List not found')
-                for member in _list.members:
+                for member in user.members:
                     row = []
                     try:
                         row.append(member.user.display_name)
@@ -103,10 +104,10 @@ class Users():
             table.append([])
             if list_name is not None:
                 try:
-                    _list = self.client.get_list(list_name)
+                    user = self.client.get_list(list_name)
                 except HTTPError:
                     raise ListException('List not found')
-                for member in _list.members:
+                for member in user.members:
                     table.append([str(member.user.addresses[0])])
             else:
                 for user in users:
@@ -122,10 +123,13 @@ class Users():
            :param args: Commandline arguments
            :type args: dictionary
         """
+        if args['user'] is not None:
+            self.describe(args)
+            return
         longlist = args['verbose']
         hide_header = args['no_header']
         list_name = args['list_name']
-        table = self.get_listing(list_name, longlist, hide_header)
+        table = self.getusering(list_name, longlist, hide_header)
         headers = table[0]
         try:
             table = table[1:]
@@ -133,7 +137,38 @@ class Users():
             table = []
         print tabulate(table, headers=headers, tablefmt='plain')
 
+    def describe(self, args):
+        ''' Describes a user object '''
+        try:
+            user = self.client.get_user(args['user'])
+        except HTTPError:
+            raise UserException('User not found')
+        table = []
+        table.append(['User ID', user.user_id])
+        table.append(['Display Name', user.display_name])
+        table.append(['Created on', user.created_on])
+        table.append(['Self Link', user.self_link])
+        table.append(['', ''])
+        table.append(['User Preferences', ''])
+        table.append(['================', ''])
+        preferences = user.preferences._preferences
+        for i in preferences:
+            table.append([i, str(preferences[i])])
+        table.append(['', ''])
+        table.append(['Subscription List IDs', ''])
+        table.append(['=====================', ''])
+        for _list in user.subscription_list_ids:
+            table.append([_list, ''])
+        table.append(['', ''])
+        table.append(['Subscriptions', ''])
+        table.append(['=============', ''])
+        for subscription in user.subscriptions:
+            table.append([subscription.email+' at '+str(subscription.list_id),
+                         str(subscription.role)])
+        print tabulate(table, tablefmt='plain')
+
     def delete(self, args):
+        ''' Deletes a User object '''
         try:
             user = self.client.get_user(args['user'])
         except HTTPError:
@@ -148,3 +183,37 @@ class Users():
             else:
                 raise Exception('Invalid answer')
         user.delete()
+
+    def subscribe(self, args):
+        ''' Subsribes a user or a list of users to a list '''
+        list_name = args['list_name']
+        emails = args['users']
+        try:
+            user = self.client.get_list(list_name)
+        except HTTPError:
+            raise ListException('List not found')
+        for i in emails:
+            try:
+                user.subscribe(i)
+                if not args['quiet']:
+                    colorize.warn('%s subscribed to %s' % (i, list_name))
+            except Exception as e:
+                if not args['quiet']:
+                    colorize.error('Failed to subscribe %s : %s' % (i, e))
+
+    def unsubscribe(self, args):
+        ''' Unsubsribes a user or a list of users from a list '''
+        list_name = args['list_name']
+        emails = args['users']
+        try:
+            user = self.client.get_list(list_name)
+        except HTTPError:
+            raise ListException('List not found')
+        for i in emails:
+            try:
+                user.unsubscribe(i)
+                if not args['quiet']:
+                    colorize.warn('%s unsubscribed from %s' % (i, list_name))
+            except Exception as e:
+                if not args['quiet']:
+                    colorize.error('Failed to unsubscribe %s : %s' % (i, e))

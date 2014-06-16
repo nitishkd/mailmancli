@@ -35,6 +35,7 @@ class Domains():
 
         # Tests if connection OK else raise exception
         domains = self.client.domains
+        del domains
 
     def create(self, args):
         """Create a domain name with specified domain_name.
@@ -92,6 +93,9 @@ class Domains():
            :param args: Commandline arguments
            :type args: dictionary
         """
+        if args['domain'] is not None:
+            self.describe(args)
+            return
         longlist = args['verbose']
         hide_header = args['no_header']
         table = self.get_listing(longlist, hide_header)
@@ -101,6 +105,27 @@ class Domains():
         except IndexError:
             table = []
         print tabulate(table, headers=headers, tablefmt='plain')
+
+    def describe(self, args):
+        try:
+            domain = self.client.get_domain(args['domain'])
+        except HTTPError:
+            raise DomainException('Domain not found')
+        table = []
+        table.append(['Base URL', domain.base_url])
+        table.append(['Contact Address', domain.contact_address])
+        table.append(['Mail Host', domain.mail_host])
+        table.append(['URL Host', domain.url_host])
+        table.append(['', ''])
+        table.append(['Description', ''])
+        table.append(['=============', ''])
+        table.append([domain.description, ''])
+        table.append(['', ''])
+        table.append(['Lists', ''])
+        table.append(['=============', ''])
+        for _list in domain.lists:
+            table.append([_list.list_id, ''])
+        print tabulate(table, tablefmt='plain')
 
     def delete(self, args):
         try:

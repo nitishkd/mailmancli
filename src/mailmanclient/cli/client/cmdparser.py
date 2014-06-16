@@ -38,6 +38,9 @@ class CmdParser():
 
         # Show lists
         show_list = scope.add_parser('list')
+        show_list.add_argument('list',
+                               help='List details about LIST',
+                               nargs='?')
         show_list.add_argument('-d',
                                '--domain',
                                help='Filter by DOMAIN')
@@ -51,6 +54,9 @@ class CmdParser():
 
         # Show domains
         show_domain = scope.add_parser('domain')
+        show_domain.add_argument('domain',
+                                 help='List details about DOMAIN',
+                                 nargs='?')
         show_domain.add_argument('-v',
                                  '--verbose',
                                  help='Detailed listing',
@@ -61,6 +67,9 @@ class CmdParser():
 
         # Show users
         show_user = scope.add_parser('user')
+        show_user.add_argument('user',
+                               help='List details about USER',
+                               nargs='?')
         show_user.add_argument('-v',
                                '--verbose',
                                help='Detailed listing',
@@ -124,6 +133,37 @@ class CmdParser():
                                  help='Force delete',
                                  action='store_true')
 
+        # Parser for the action `subscribe`
+        action_subscribe = action.add_parser('subscribe')
+        scope = action_subscribe.add_subparsers(dest='scope')
+        subscribe_user = scope.add_parser('user')
+        subscribe_user.add_argument('users',
+                                    help='User email list',
+                                    nargs='+')
+        subscribe_user.add_argument('-l',
+                                    '--list',
+                                    help='Specify list name',
+                                    dest='list_name',
+                                    required=True)
+        subscribe_user.add_argument('--quiet',
+                                    help='Do not display feedback',
+                                    action='store_true')
+
+        # Parser for the action `unsubscribe`
+        action_subscribe = action.add_parser('unsubscribe')
+        scope = action_subscribe.add_subparsers(dest='scope')
+        subscribe_user = scope.add_parser('user')
+        subscribe_user.add_argument('users',
+                                    help='User email list',
+                                    nargs='+')
+        subscribe_user.add_argument('-l',
+                                    '--list',
+                                    help='Specify list name',
+                                    dest='list_name',
+                                    required=True)
+        subscribe_user.add_argument('--quiet',
+                                    help='Do not display feedback',
+                                    action='store_true')
         # Global options
         parser.add_argument('--host', help='REST API host address',
                             default='http://127.0.0.1')

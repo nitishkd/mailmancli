@@ -37,6 +37,7 @@ class Lists():
 
         # Tests if connection OK else raise exception
         lists = self.client.lists
+        del lists
 
     def create(self, args):
         """Create a mailing list with specified list_name
@@ -122,6 +123,9 @@ class Lists():
            :param args: Commandline arguments
            :type args: dictionary
         """
+        if args['list'] is not None:
+            self.describe(args)
+            return
         domain_name = args['domain']
         longlist = args['verbose']
         hide_header = args['no_header']
@@ -132,6 +136,38 @@ class Lists():
         except IndexError:
             table = []
         print tabulate(table, headers=headers, tablefmt='plain')
+
+    def describe(self, args):
+        try:
+            _list = self.client.get_list(args['list'])
+        except HTTPError:
+            raise ListException('List not found')
+        table = []
+        table.append(['List ID', _list.list_id])
+        table.append(['List name', _list.list_name])
+        table.append(['Mail host', _list.mail_host])
+        table.append(['', ''])
+        table.append(['List Settings:', ''])
+        table.append(['=============', ''])
+        for i in _list.settings:
+            table.append([i, str(_list.settings[i])])
+        table.append(['', ''])
+        table.append(['Owners:', ''])
+        table.append(['=============', ''])
+        for owner in _list.owners:
+            table.append([owner, ''])
+        table.append(['', ''])
+        table.append(['Moderators:', ''])
+        table.append(['=============', ''])
+        for moderator in _list.moderators:
+            table.append([moderator, ''])
+        table.append(['', ''])
+        table.append(['Members:', ''])
+        table.append(['=============', ''])
+        for member in _list.members:
+            table.append([member.email, ''])
+        # print table
+        print tabulate(table, tablefmt='plain')
 
     def list_members(self, list_name):
         pass
