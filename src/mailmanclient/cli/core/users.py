@@ -16,10 +16,10 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from lib.utils import Colorizer
+from lib.utils import Utils
 from core.lists import ListException
 
-colorize = Colorizer()
+utils = Utils()
 
 
 class UserException(Exception):
@@ -55,7 +55,7 @@ class Users():
         except HTTPError:
             raise UserException('User already exists')
 
-    def getusering(self, list_name, detailed, hide_header):
+    def get_listing(self, list_name, detailed, hide_header):
         """Returns list of mailing lists, formatted for tabulation.
 
             :param list_name: Name of the list whose members are to be listed
@@ -129,7 +129,7 @@ class Users():
         longlist = args['verbose']
         hide_header = args['no_header']
         list_name = args['list_name']
-        table = self.getusering(list_name, longlist, hide_header)
+        table = self.get_listing(list_name, longlist, hide_header)
         headers = table[0]
         try:
             table = table[1:]
@@ -148,20 +148,14 @@ class Users():
         table.append(['Display Name', user.display_name])
         table.append(['Created on', user.created_on])
         table.append(['Self Link', user.self_link])
-        table.append(['', ''])
-        table.append(['User Preferences', ''])
-        table.append(['================', ''])
+        utils.set_table_section_heading(table, 'User Preferences')
         preferences = user.preferences._preferences
         for i in preferences:
             table.append([i, str(preferences[i])])
-        table.append(['', ''])
-        table.append(['Subscription List IDs', ''])
-        table.append(['=====================', ''])
+        utils.set_table_section_heading(table, 'Subscription List IDs')
         for _list in user.subscription_list_ids:
             table.append([_list, ''])
-        table.append(['', ''])
-        table.append(['Subscriptions', ''])
-        table.append(['=============', ''])
+        utils.set_table_section_heading(table, 'Subscriptions')
         for subscription in user.subscriptions:
             table.append([subscription.email+' at '+str(subscription.list_id),
                          str(subscription.role)])
@@ -174,7 +168,7 @@ class Users():
         except HTTPError:
             raise UserException('User not found')
         if not args['yes']:
-            colorize.confirm('Delete user %s?[y/n]' % args['user'])
+            utils.confirm('Delete user %s?[y/n]' % args['user'])
             confirm = raw_input()
             if confirm == 'y':
                 args['yes'] = True
@@ -196,10 +190,10 @@ class Users():
             try:
                 user.subscribe(i)
                 if not args['quiet']:
-                    colorize.warn('%s subscribed to %s' % (i, list_name))
+                    utils.warn('%s subscribed to %s' % (i, list_name))
             except Exception as e:
                 if not args['quiet']:
-                    colorize.error('Failed to subscribe %s : %s' % (i, e))
+                    utils.error('Failed to subscribe %s : %s' % (i, e))
 
     def unsubscribe(self, args):
         ''' Unsubsribes a user or a list of users from a list '''
@@ -213,7 +207,7 @@ class Users():
             try:
                 user.unsubscribe(i)
                 if not args['quiet']:
-                    colorize.warn('%s unsubscribed from %s' % (i, list_name))
+                    utils.warn('%s unsubscribed from %s' % (i, list_name))
             except Exception as e:
                 if not args['quiet']:
-                    colorize.error('Failed to unsubscribe %s : %s' % (i, e))
+                    utils.error('Failed to unsubscribe %s : %s' % (i, e))

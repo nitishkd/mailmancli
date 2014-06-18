@@ -107,6 +107,42 @@ To obtain a detailed description of a list at one glance
 
     $./mmclient show list list@domain.org
 
+Adding and removing moderators can be performed using the CLI as follows
+
+To get a list of members of a mailing list
+
+    $./mmclient show-members list list@domain.org
+
+The above command is equivalent to 
+    
+    $./mmclient show user --list list@domain.com
+
+The command also supports flags like 
+    
+    --verbose Show a detailed listing
+    --no-header Hide header in detailed listing
+
+Refer the `show user` command for more details
+
+To add moderators or owners
+
+    ./mmclient add-moderator list list@domain.org --user a@b.com b@c.com
+    ./mmclient add-owner list list@domain.org --user a@b.com b@c.com
+
+And to remove moderators or owners
+
+    ./mmclient remove-moderator list list@domain.org --user a@b.com b@c.com
+    ./mmclient remove-owner list list@domain.org --user a@b.com b@c.com
+
+The add and remove commands support the action on a list of users 
+at once. Success or failure messages are provided upon completion or
+failure of an action. The messages can be supressed by using a quiet flag.
+
+    ./mmclient remove-moderator list list@domain.org --user a@b.com b@c.com --quiet
+
+If the action fails for a user, the user is ignored and the action continues
+without stalling.
+
 User
 ====
 
@@ -151,6 +187,8 @@ Users can be subscribed to a mailing list by using the subscribe
 command
 
     $./mmclient subscribe user user1@bar.com user2@bar.com --list list@domain.org
+    user1@bar.com subscribed to list@domain.org
+    Failed to subscribe user2@bar.com : HTTP Error 409: Member already subscribed
 
 Multiple users can be subscribed to the list at the same time.
 
@@ -158,6 +196,8 @@ Similarly, Users can be unsubscribed to a mailing list by using the unsubscribe
 command
 
     $./mmclient unsubscribe user user1@bar.com user2@bar.com --list list@domain.org
+    user1@bar.com unsubscribed from list@domain.org
+    user2@bar.com unsubscribed from list@domain.org
 
 The feedback for the subscribe and unsubscribe actions can be supressed by
 using the --quiet flag.

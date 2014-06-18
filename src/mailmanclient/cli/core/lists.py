@@ -16,11 +16,11 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from lib.utils import Colorizer
+from lib.utils import Utils
 from core.domains import DomainException
 
 
-colorize = Colorizer()
+utils = Utils()
 
 
 class ListException(Exception):
@@ -146,31 +146,95 @@ class Lists():
         table.append(['List ID', _list.list_id])
         table.append(['List name', _list.list_name])
         table.append(['Mail host', _list.mail_host])
-        table.append(['', ''])
-        table.append(['List Settings:', ''])
-        table.append(['=============', ''])
+        utils.set_table_section_heading(table, 'List Settings')
         for i in _list.settings:
             table.append([i, str(_list.settings[i])])
-        table.append(['', ''])
-        table.append(['Owners:', ''])
-        table.append(['=============', ''])
+        utils.set_table_section_heading(table, 'Owners')
         for owner in _list.owners:
             table.append([owner, ''])
-        table.append(['', ''])
-        table.append(['Moderators:', ''])
-        table.append(['=============', ''])
+        utils.set_table_section_heading(table, 'Moderators')
         for moderator in _list.moderators:
             table.append([moderator, ''])
-        table.append(['', ''])
-        table.append(['Members:', ''])
-        table.append(['=============', ''])
+        utils.set_table_section_heading(table, 'Members')
         for member in _list.members:
             table.append([member.email, ''])
-        # print table
         print tabulate(table, tablefmt='plain')
 
-    def list_members(self, list_name):
-        pass
+    def add_moderator(self, args):
+        try:
+            _list = self.client.get_list(args['list'])
+        except HTTPError:
+            raise ListException('List not found')
+        users = args['users']
+        quiet = args['quiet']
+        for user in users:
+            try:
+                _list.add_moderator(user)
+                if not quiet:
+                    utils.warn('Added %s as moderator' % (user))
+            except Exception as e:
+                if not quiet:
+                    utils.error('Failed to add %s : %s ' %
+                                (user, e))
+
+    def add_owner(self, args):
+        try:
+            _list = self.client.get_list(args['list'])
+        except HTTPError:
+            raise ListException('List not found')
+        users = args['users']
+        quiet = args['quiet']
+        for user in users:
+            try:
+                _list.add_owner(user)
+                if not quiet:
+                    utils.warn('Added %s as owner' % (user))
+            except Exception as e:
+                if not quiet:
+                    utils.error('Failed to add %s : %s ' %
+                                (user, e))
+
+    def remove_moderator(self, args):
+        try:
+            _list = self.client.get_list(args['list'])
+        except HTTPError:
+            raise ListException('List not found')
+        users = args['users']
+        quiet = args['quiet']
+        for user in users:
+            try:
+                _list.remove_moderator(user)
+                if not quiet:
+                    utils.warn('Removed %s as moderator' % (user))
+            except Exception as e:
+                if not quiet:
+                    utils.error('Failed to remove %s : %s ' %
+                                (user, e))
+
+    def remove_owner(self, args):
+        try:
+            _list = self.client.get_list(args['list'])
+        except HTTPError:
+            raise ListException('List not found')
+        users = args['users']
+        quiet = args['quiet']
+        for user in users:
+            try:
+                _list.remove_owner(user)
+                if not quiet:
+                    utils.warn('Removed %s as owner' % (user))
+            except Exception as e:
+                if not quiet:
+                    utils.error('Failed to remove %s : %s ' %
+                                (user, e))
+
+    def show_members(self, args):
+        from core.users import Users
+        users = Users(self.client)
+        args['list_name'] = args['list']
+        args['user'] = None
+        users.show(args)
+
 
     def delete(self, args):
         try:
@@ -178,8 +242,8 @@ class Lists():
         except HTTPError:
             raise ListException('List not found')
         if not args['yes']:
-            colorize.confirm('List %s has %d members.Delete?[y/n]'
-                             % (args['list'], len(_list.members)))
+            utils.confirm('List %s has %d members.Delete?[y/n]'
+                          % (args['list'], len(_list.members)))
             confirm = raw_input()
             if confirm == 'y':
                 args['yes'] = True

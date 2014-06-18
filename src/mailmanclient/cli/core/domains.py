@@ -16,10 +16,10 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from lib.utils import Colorizer
+from lib.utils import Utils
 
 
-colorize = Colorizer()
+utils = Utils()
 
 
 class DomainException(Exception):
@@ -116,13 +116,9 @@ class Domains():
         table.append(['Contact Address', domain.contact_address])
         table.append(['Mail Host', domain.mail_host])
         table.append(['URL Host', domain.url_host])
-        table.append(['', ''])
-        table.append(['Description', ''])
-        table.append(['=============', ''])
+        utils.set_table_section_heading(table, 'Description')
         table.append([domain.description, ''])
-        table.append(['', ''])
-        table.append(['Lists', ''])
-        table.append(['=============', ''])
+        utils.set_table_section_heading(table, 'Lists')
         for _list in domain.lists:
             table.append([_list.list_id, ''])
         print tabulate(table, tablefmt='plain')
@@ -133,8 +129,8 @@ class Domains():
         except HTTPError:
             raise DomainException('Domain not found')
         if not args['yes']:
-            colorize.confirm('Domain `%s` has %d lists.Delete?[y/n]'
-                             % (args['domain'], len(domain.lists)))
+            utils.confirm('Domain `%s` has %d lists.Delete?[y/n]'
+                          % (args['domain'], len(domain.lists)))
             confirm = raw_input()
             if confirm == 'y':
                 args['yes'] = True

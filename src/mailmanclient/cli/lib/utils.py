@@ -46,3 +46,8 @@ class Utils(Colorizer):
             return sha1(str(datetime.now())).hexdigest()[:length]
         except IndexError:
             raise Exception('Specify length less than 40')
+
+    def set_table_section_heading(self, table, heading):
+        table.append(['', ''])
+        table.append([heading, ''])
+        table.append(['=============', ''])

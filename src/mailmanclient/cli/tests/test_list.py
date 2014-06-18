@@ -111,6 +111,7 @@ class TestShowList(unittest.TestCase):
         args['no_header'] = False
         args['verbose'] = False
         args['domain'] = None
+        args['list'] = None
         self._list.show(args)
         mlist_list = output.getvalue().split('\n')
         count = len(mlist_list) - 1
@@ -123,6 +124,7 @@ class TestShowList(unittest.TestCase):
         args['no_header'] = False
         args['verbose'] = False
         args['domain'] = self.test_domain
+        args['list'] = None
         self._list.show(args)
         mlist_list = output.getvalue().split('\n')
         count = len(mlist_list) - 1
@@ -134,6 +136,7 @@ class TestShowList(unittest.TestCase):
         args['no_header'] = False
         args['verbose'] = True
         args['domain'] = None
+        args['list'] = None
         self._list.show(args)
         mlists = output.getvalue().split('\n')
         test_list = '%s@%s' % (self.test_list, self.test_domain)
@@ -159,6 +162,7 @@ class TestShowList(unittest.TestCase):
         args['no_header'] = False
         args['verbose'] = True
         args['domain'] = self.test_domain
+        args['list'] = None
         self._list.show(args)
         mlists = output.getvalue().split('\n')
         mlist = ''
@@ -184,6 +188,7 @@ class TestShowList(unittest.TestCase):
         args['no_header'] = False
         args['verbose'] = True
         args['domain'] = None
+        args['list'] = None
         self._list.show(args)
         mlists = output.getvalue().split('\n')
         line_one = mlists[0].split()

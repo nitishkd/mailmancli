@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
 from argparse import ArgumentParser
 from core.lists import Lists
 from core.users import Users
@@ -132,6 +133,19 @@ class CmdParser():
         delete_user.add_argument('--yes',
                                  help='Force delete',
                                  action='store_true')
+        # Show Members of a list
+        action_show_member = action.add_parser('show-members')
+        scope = action_show_member.add_subparsers(dest='scope')
+        show_member = scope.add_parser('list')
+        show_member.add_argument('list',
+                               help='Show members of LIST')
+        show_member.add_argument('-v',
+                               '--verbose',
+                               help='Detailed listing',
+                               action='store_true')
+        show_member.add_argument('--no-header',
+                               help='Omit headings in detailed listing',
+                               action='store_true')
 
         # Parser for the action `subscribe`
         action_subscribe = action.add_parser('subscribe')
@@ -164,6 +178,65 @@ class CmdParser():
         subscribe_user.add_argument('--quiet',
                                     help='Do not display feedback',
                                     action='store_true')
+        # Moderation Tools
+
+        # Add Moderator
+        action_add_moderator = action.add_parser('add-moderator')
+        scope = action_add_moderator.add_subparsers(dest='scope')
+        add_moderator = scope.add_parser('list')
+        add_moderator.add_argument('list',
+                                   help='Specify list name')
+        add_moderator.add_argument('-u',
+                                   '--user',
+                                   help='User email list',
+                                   dest='users',
+                                   nargs='+',
+                                   required=True)
+        add_moderator.add_argument('--quiet',
+                                   help='Do not display feedback',
+                                   action='store_true')
+        # Add Owner
+        action_add_owner = action.add_parser('add-owner')
+        scope = action_add_owner.add_subparsers(dest='scope')
+        add_owner = scope.add_parser('list')
+        add_owner.add_argument('list',
+                               help='Specify list name')
+        add_owner.add_argument('-u',
+                               '--user',
+                               help='User email list',
+                               dest='users',
+                               nargs='+')
+        add_owner.add_argument('--quiet',
+                               help='Do not display feedback',
+                               action='store_true')
+        # Remove Moderator
+        action_remove_moderator = action.add_parser('remove-moderator')
+        scope = action_remove_moderator.add_subparsers(dest='scope')
+        remove_moderator = scope.add_parser('list')
+        remove_moderator.add_argument('list',
+                                      help='Specify list name')
+        remove_moderator.add_argument('-u',
+                                      '--user',
+                                      dest='users',
+                                      help='User email list',
+                                      nargs='+')
+        remove_moderator.add_argument('--quiet',
+                                      help='Do not display feedback',
+                                      action='store_true')
+        # Remove Owner
+        action_remove_owner = action.add_parser('remove-owner')
+        scope = action_remove_owner.add_subparsers(dest='scope')
+        remove_owner = scope.add_parser('list')
+        remove_owner.add_argument('list',
+                                  help='Specify list name')
+        remove_owner.add_argument('-u',
+                                  '--user',
+                                  help='User email list',
+                                  dest='users',
+                                  nargs='+')
+        remove_owner.add_argument('--quiet',
+                                  help='Do not display feedback',
+                                  action='store_true')
         # Global options
         parser.add_argument('--host', help='REST API host address',
                             default='http://127.0.0.1')
@@ -203,6 +276,7 @@ class CmdParser():
 
     def run(self):
         method_name = 'manage_' + self.arguments['scope']
+        self.arguments['action'] = re.sub('-', '_', self.arguments['action'])
         host = self.arguments['host']
         port = self.arguments['port']
         username = self.arguments['restuser']

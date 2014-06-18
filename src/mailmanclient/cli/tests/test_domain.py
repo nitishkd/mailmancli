@@ -89,6 +89,7 @@ class TestShowDomain(unittest.TestCase):
         args = {}
         args['no_header'] = False
         args['verbose'] = False
+        args['domain'] = None
         self.domain.show(args)
         domain_list = output.getvalue().split('\n')
         count = len(domain_list) - 1
@@ -99,6 +100,7 @@ class TestShowDomain(unittest.TestCase):
         args = {}
         args['no_header'] = False
         args['verbose'] = True
+        args['domain'] = None
         test_domain = random.randint(0, len(self.client.domains) - 1)
         test_domain = self.client.domains[test_domain]
         self.domain.show(args)
@@ -122,6 +124,7 @@ class TestShowDomain(unittest.TestCase):
         args = {}
         args['no_header'] = True
         args['verbose'] = True
+        args['domain'] = None
         test_domain = random.randint(0, len(self.client.domains) - 1)
         test_domain = self.client.domains[test_domain]
         self.domain.show(args)
