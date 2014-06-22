@@ -19,8 +19,9 @@ from argparse import ArgumentParser
 from core.lists import Lists
 from core.users import Users
 from lib.utils import Colorizer
-from core.domains import Domains
 from mailmanclient import Client
+from core.domains import Domains
+from core.preferences import Preferences
 from mailmanclient._client import MailmanConnectionError
 
 
@@ -82,6 +83,40 @@ class CmdParser():
                                '--list',
                                help='Specify list name',
                                dest='list_name')
+        # Show preferences
+        preferences = ['receive_list_copy', 'hide_address',
+                       'preferred_language', 'acknowledge_posts',
+                       'delivery_mode', 'receive_own_postings',
+                       'http_etag', 'self_link', 'delivery_status']
+        show_preference = scope.add_parser('preference')
+        show_scope = show_preference.add_subparsers(dest='show_scope')
+
+        show_scope.add_parser('global')
+
+        user_show = show_scope.add_parser('user')
+        user_show.add_argument('--email',
+                               help='Email of user whose '
+                               'preference is to be shown',
+                               required=True)
+
+        address_show = show_scope.add_parser('address')
+        address_show.add_argument('--email',
+                                  help='Address whose preference'
+                                  ' is to be shown',
+                                  required=True)
+
+        member_show = show_scope.add_parser('member')
+        member_show.add_argument('--email',
+                                 help='Address whose preference'
+                                 ' is to be shown',
+                                 required=True)
+        member_show.add_argument('--list',
+                                 help='FQDN name of list',
+                                 required=True)
+
+        show_preference.add_argument('key',
+                                     help='Specify setting name',
+                                     choices=preferences)
 
         # Parser for the action `create`
         action_create = action.add_parser('create')
@@ -138,14 +173,14 @@ class CmdParser():
         scope = action_show_member.add_subparsers(dest='scope')
         show_member = scope.add_parser('list')
         show_member.add_argument('list',
-                               help='Show members of LIST')
+                                 help='Show members of LIST')
         show_member.add_argument('-v',
-                               '--verbose',
-                               help='Detailed listing',
-                               action='store_true')
+                                 '--verbose',
+                                 help='Detailed listing',
+                                 action='store_true')
         show_member.add_argument('--no-header',
-                               help='Omit headings in detailed listing',
-                               action='store_true')
+                                 help='Omit headings in detailed listing',
+                                 action='store_true')
 
         # Parser for the action `subscribe`
         action_subscribe = action.add_parser('subscribe')
@@ -237,6 +272,40 @@ class CmdParser():
         remove_owner.add_argument('--quiet',
                                   help='Do not display feedback',
                                   action='store_true')
+        # Edit preferences
+        action_update = action.add_parser('update')
+        scope = action_update.add_subparsers(dest='scope')
+        update_preference = scope.add_parser('preference')
+        update_scope = update_preference.add_subparsers(dest='update_scope')
+
+        update_scope.add_parser('global')
+
+        user_update = update_scope.add_parser('user')
+        user_update.add_argument('--email',
+                                 help='Email of user whose '
+                                 'preference is to be changed',
+                                 required=True)
+
+        address_update = update_scope.add_parser('address')
+        address_update.add_argument('--email',
+                                    help='Address whose preference'
+                                    ' is to be changed',
+                                    required=True)
+
+        member_update = update_scope.add_parser('member')
+        member_update.add_argument('--email',
+                                   help='Address whose preference'
+                                   ' is to be changed',
+                                   required=True)
+        member_update.add_argument('--list',
+                                   help='FQDN name of list',
+                                   required=True)
+
+        update_preference.add_argument('key',
+                                       help='Specify setting name',
+                                       choices=preferences)
+        update_preference.add_argument('value',
+                                       help='Specify setting value')
         # Global options
         parser.add_argument('--host', help='REST API host address',
                             default='http://127.0.0.1')
@@ -247,35 +316,12 @@ class CmdParser():
         parser.add_argument('--restpass', help='REST API password',
                             default='restpass')
 
-    def manage_list(self, client):
-        try:
-            lists = Lists(client)
-        except MailmanConnectionError:
-            raise Exception('Connection to REST API failed')
-        action_name = self.arguments['action']
-        action = getattr(lists, action_name)
-        action(self.arguments)
-
-    def manage_domain(self, client):
-        try:
-            domains = Domains(client)
-        except MailmanConnectionError:
-            raise Exception('Connection to REST API failed')
-        action_name = self.arguments['action']
-        action = getattr(domains, action_name)
-        action(self.arguments)
-
-    def manage_user(self, client):
-        try:
-            users = Users(client)
-        except MailmanConnectionError:
-            raise Exception('Connection to REST API failed')
-        action_name = self.arguments['action']
-        action = getattr(users, action_name)
-        action(self.arguments)
-
     def run(self):
-        method_name = 'manage_' + self.arguments['scope']
+        scopes = {}
+        scopes['user'] = Users
+        scopes['list'] = Lists
+        scopes['domain'] = Domains
+        scopes['preference'] = Preferences
         self.arguments['action'] = re.sub('-', '_', self.arguments['action'])
         host = self.arguments['host']
         port = self.arguments['port']
@@ -284,9 +330,14 @@ class CmdParser():
         client = Client('%s:%s/3.0' % (host, port),
                         username,
                         password)
-        method = getattr(self, method_name)
         try:
-            method(client)
+            try:
+                scope_object = scopes[self.arguments['scope']](client)
+            except MailmanConnectionError:
+                raise Exception('Connection to REST API failed')
+            action_name = self.arguments['action']
+            action = getattr(scope_object, action_name)
+            action(self.arguments)
         except Exception as e:
             colorize = Colorizer()
             colorize.error(e)

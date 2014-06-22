@@ -235,7 +235,6 @@ class Lists():
         args['user'] = None
         users.show(args)
 
-
     def delete(self, args):
         try:
             _list = self.client.get_list(args['list'])

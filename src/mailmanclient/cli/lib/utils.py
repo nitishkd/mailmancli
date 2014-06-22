@@ -32,6 +32,9 @@ class Colorizer():
     def confirm(self, message):
         print "\033[92m%s\033[0m" % message,
 
+    def emphazize(self, message):
+        print "\033[92m%s\033[0m" % message
+
 
 class Utils(Colorizer):
     """ General utilities to be used across the CLI """

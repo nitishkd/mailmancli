@@ -208,3 +208,35 @@ using the --quiet flag.
 The subscribe and unsubscribe actions continue even if one the users 
 fail to subscribe/unsubscribe to a list. A relevant feedback message is
 provided if the --quiet flag is not enabled.
+
+Preferences
+===========
+
+Preferences for user,address,member or globally can be updated and retrieved 
+by using the commands of preference scope.
+
+To update the value of a preference of an user
+
+    ./mmclient update preference user --email foo@bar.com [key] [value]
+
+To update the value of a preference of a member
+
+    ./mmclient update preference member --email foo@bar.com --list list@domain.org [key] [value]
+
+To update the value of a preference of an address
+
+    ./mmclient update preference address --email foo@bar.com [key] [value]
+
+To update the value of a preference globally
+
+    ./mmclient update preference global [key] [value]
+
+To view the current value of a preference, use the `mmclient show preference` command
+in the same way above, obviously, without the `value` argument
+
+For eg, to view a setting of a member
+
+    ./mmclient show preference member --email foo@bar.com --list list@domain.org [key]
+
+Both the commands try to suggest the possible preference keys upon errors while typing the
+keys. The commands return `1` upon an invalid key.
