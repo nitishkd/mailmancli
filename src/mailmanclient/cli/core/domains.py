@@ -56,13 +56,15 @@ class Domains():
         except HTTPError:
             raise DomainException('Domain already exists')
 
-    def get_listing(self, detailed, hide_header):
+    def get_listing(self, detailed, hide_header, domains_ext):
         """Returns list of domains, formatted for tabulation.
 
            :param detailed: Return domain details or not
            :type detailed: boolean
            :param hide_header: Hide header
            :type hide_header: boolean
+           :param domains_ext: External domains to list
+           :type domains_ext: array
            :rtype: Returns a table as a nested list
         """
         domains = self.client.domains
@@ -74,6 +76,8 @@ class Domains():
                 headers = ['Base URL', 'Contact address',
                            'Mail host', 'URL host']
             table.append(headers)
+            if domains_ext is not None:
+                domains = domains_ext
             for i in domains:
                 row = []
                 row.append(i.base_url)
@@ -87,7 +91,7 @@ class Domains():
                 table.append([i.base_url])
         return table
 
-    def show(self, args):
+    def show(self, args, domains_ext=None):
         """List the domains in the system.
 
            :param args: Commandline arguments
@@ -98,7 +102,7 @@ class Domains():
             return
         longlist = args['verbose']
         hide_header = args['no_header']
-        table = self.get_listing(longlist, hide_header)
+        table = self.get_listing(longlist, hide_header, domains_ext)
         headers = table[0]
         try:
             table = table[1:]

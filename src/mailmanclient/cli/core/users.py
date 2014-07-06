@@ -55,7 +55,7 @@ class Users():
         except HTTPError:
             raise UserException('User already exists')
 
-    def get_listing(self, list_name, detailed, hide_header):
+    def get_listing(self, list_name, detailed, hide_header, users_ext):
         """Returns list of mailing lists, formatted for tabulation.
 
             :param list_name: Name of the list whose members are to be listed
@@ -74,6 +74,8 @@ class Users():
             else:
                 headers = ['Display Name', 'Address', 'Created on', 'User ID']
             table.append(headers)
+            if users_ext is not None:
+                users = users_ext
             if list_name is not None:
                 try:
                     user = self.client.get_list(list_name)
@@ -117,7 +119,7 @@ class Users():
                         pass
         return table
 
-    def show(self, args):
+    def show(self, args, users_ext=None):
         """List users in the system.
 
            :param args: Commandline arguments
@@ -129,7 +131,7 @@ class Users():
         longlist = args['verbose']
         hide_header = args['no_header']
         list_name = args['list_name']
-        table = self.get_listing(list_name, longlist, hide_header)
+        table = self.get_listing(list_name, longlist, hide_header, users_ext)
         headers = table[0]
         try:
             table = table[1:]

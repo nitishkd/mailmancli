@@ -17,13 +17,20 @@
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from client.cmdparser import CmdParser
 from client.shell import Shell
+from lib.utils import CmdPreprocessor
+from client.cmdparser import CmdParser
 
 try:
     sys.argv[1]
-    c = CmdParser(sys.argv)
+    arguments = None
+    try:
+        arguments = CmdPreprocessor(sys.argv)
+    except:
+        pass
+    c = CmdParser(arguments)
     c.run()
 except IndexError:
     s = Shell()
+    s.initialize()
     s.cmdloop()

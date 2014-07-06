@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
-import re
 from argparse import ArgumentParser
 from core.lists import Lists
 from core.users import Users
@@ -322,7 +321,7 @@ class CmdParser():
         scopes['list'] = Lists
         scopes['domain'] = Domains
         scopes['preference'] = Preferences
-        self.arguments['action'] = re.sub('-', '_', self.arguments['action'])
+        self.arguments['action'] = self.arguments['action'].replace('-', '_')
         host = self.arguments['host']
         port = self.arguments['port']
         username = self.arguments['restuser']

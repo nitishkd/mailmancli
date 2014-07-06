@@ -1,0 +1,60 @@
+The Mailman Command Line Shell
+==============================
+
+This document describes the usage of the Mailman Command line
+shell, using which you can query a mailman installation with ease.
+
+Firing and Exiting the Shell
+============================
+
+You can start the mailman shell by executing the mmclient command,
+without any arguments
+
+    $ ./mmclient
+    Mailman Command Line Interface
+    >>>
+
+To exit the shell, use the EOF character, that is, Ctrl + d.
+
+Displaying Mailman Objects
+==========================
+
+The shell can be used to display the mailman objects, using the show
+command.
+
+For example
+    show users
+    show domains
+    show lists
+
+Further, the CLI supports filtering of mailman objects based upon their
+attribute values or properties, using a `where` clause. For this, the CLI 
+employs 3 filters, which are
+
+    =        Equality
+    like     Case insensitive regular exp mathcing
+    in       Search inside a property which list
+
+These filteres can be used in conjunction by using an `and` clause
+
+Examples:
+    show users where display_name = Foo
+    show users where display_name like .*Foo*
+    show lists where foo@bar.com in moderators
+    show lists where foo@bar.com in moderators and a@b.com in owners
+
+The Shell Environment
+======================
+
+The shell provides a facility to create variables that can be used to
+make the querying easier.
+
+For using the shell, two commands, `set` and `unset` are used.
+
+Example
+  set useremail foo@bar.com
+
+The variables can be used in the queries as follows
+  show lists where $useremail in moderators
+
+The `$username` will be replaced with the value of `useremail`

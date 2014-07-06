@@ -63,7 +63,7 @@ class Lists():
         except HTTPError:
             raise ListException('List already exists')
 
-    def get_listing(self, domain, detailed, hide_header):
+    def get_listing(self, domain, detailed, hide_header, lists_ext):
         """Returns list of mailing lists, formatted for tabulation.
 
             :param domain: Domain name
@@ -72,6 +72,8 @@ class Lists():
             :type detailed: boolean
             :param hide_header: Remove header
             :type hide_header: boolean
+            :param lists_ext: External array of lists
+            :type hide_header: array
         """
         lists = self.client.lists
         table = []
@@ -81,6 +83,8 @@ class Lists():
             else:
                 headers = ['ID', 'Name', 'Mail host', 'Display Name', 'FQDN']
             table.append(headers)
+            if lists_ext is not None:
+                lists = lists_ext
             if domain is not None:
                 try:
                     domain = self.client.get_domain(domain)
@@ -117,7 +121,7 @@ class Lists():
                     table.append([i.list_id])
         return table
 
-    def show(self, args):
+    def show(self, args, lists_ext=None):
         """List the mailing lists in the system or under a domain.
 
            :param args: Commandline arguments
@@ -129,7 +133,7 @@ class Lists():
         domain_name = args['domain']
         longlist = args['verbose']
         hide_header = args['no_header']
-        table = self.get_listing(domain_name, longlist, hide_header)
+        table = self.get_listing(domain_name, longlist, hide_header, lists_ext)
         headers = table[0]
         try:
             table = table[1:]
