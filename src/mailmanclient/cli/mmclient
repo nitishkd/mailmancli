@@ -33,4 +33,5 @@ try:
 except IndexError:
     s = Shell()
     s.initialize()
+    s.refresh_lists()
     s.cmdloop()
