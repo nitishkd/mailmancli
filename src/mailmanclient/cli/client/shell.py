@@ -36,9 +36,12 @@ class Shell(Cmd):
     mmclient = None
     data_filter = None
     query_list = ['show']
+    scopes = ['list', 'user', 'domain']
 
     def parseline(self, arguments):
         args = self.add_default_vars(arguments)
+        if not args:
+            return ([], [], '')
         try:
             args = compile_args(args, self.env_on, self.env)
         except IndexError:
@@ -47,6 +50,8 @@ class Shell(Cmd):
 
     def add_default_vars(self, arguments):
         args = arguments.split()
+        if len(args) < 1:
+            return False
         if 'where' not in arguments:
             arguments += ' where '
         else:
@@ -166,12 +171,15 @@ class Shell(Cmd):
         if len(args) < 2:
             utils.error('Invalid number of arguments')
             return False
-        scope = args[0]
         args.reverse()
-        args.pop()
+        scope = args.pop()
         if args:
-            args.pop()
+            # Pop out `where`
+            if args.pop() != 'where':
+                utils.error('Invalid syntax. Expected `where` clause')
+                return False
         if scope[-1] == 's':
+            # Manage Plurality
             scope = scope[:-1]
         filtered_list = self.scope_listing[scope]
         while args:
@@ -204,15 +212,26 @@ class Shell(Cmd):
             cmd_arguments['no_header'] = False
         scope_object.show(cmd_arguments, filtered_list)
 
+    def complete_show(self, text, line, begidx, endidx):
+        if not text:
+            completions = self.scopes
+        else:
+            completions = [k
+                           for k in self.scopes
+                           if k.startswith(text)
+                           ]
+        return completions
+
     def do_create(self, args):
         if len(args) < 2:
             utils.error('Invalid number of arguments')
             return False
-        scope = args[0]
         args.reverse()
-        args.pop()
+        scope = args.pop()
         if args:
-            args.pop()
+            if args.pop() != 'where':
+                utils.error('Invalid syntax. Expected `where` clause')
+                return False
         if scope[-1] == 's':
             scope = scope[:-1]
         properties = {}
@@ -233,28 +252,82 @@ class Shell(Cmd):
             utils.error('Invalid Scope')
             return False
         cmd_arguments = {}
-        req_args = {}
+        req_args = []
         try:
             if scope == 'list':
-                req_args['list'] = ['fqdn_listname']
+                req_args = ['fqdn_listname']
                 cmd_arguments['list'] = properties['fqdn_listname']
             elif scope == 'domain':
-                req_args['domain'] = ['domain', 'contact']
+                req_args = ['domain', 'contact']
                 cmd_arguments['domain'] = properties['domain']
                 cmd_arguments['contact'] = properties['contact']
             elif scope == 'user':
-                req_args['user'] = ['user', 'password', 'name']
+                req_args = ['user', 'password', 'name']
                 cmd_arguments['email'] = properties['email']
                 cmd_arguments['password'] = properties['password']
                 cmd_arguments['name'] = properties['name']
         except KeyError:
             utils.error('Invalid number of arguments')
-            utils.error('Required arguments:')
-            for i in req_args[scope]:
-                utils.error('\t' + i)
+            utils.warn('Required arguments:')
+            for i in req_args:
+                utils.warn('\t' + i)
             return False
         try:
             scope_object.create(cmd_arguments)
             self.refresh_lists()
         except Exception as e:
             utils.error(e)
+
+    def complete_create(self, text, line, begidx, endidx):
+        if not text:
+            completions = self.scopes
+        else:
+            completions = [k
+                           for k in self.scopes
+                           if k.startswith(text)
+                           ]
+        return completions
+
+    def do_delete(self, args):
+        args.reverse()
+        scope = args.pop()
+        if args:
+            if args.pop() != 'where':
+                utils.error('Invalid syntax. Expected `where` clause')
+                return False
+        if scope[-1] == 's':
+            scope = scope[:-1]
+        filtered_list = self.scope_listing[scope]
+        while args:
+            try:
+                key = args.pop()
+                op = args.pop()
+                value = args.pop()
+                self.data_filter = Filter(key, value, op, filtered_list)
+                filtered_list = self.data_filter.get_results()
+                if not filtered_list:
+                    return False
+                args.pop()
+            except:
+                pass
+        for i in filtered_list:
+            if scope == 'list':
+                utils.warn('Deleted ' + i.fqdn_listname)
+                i.delete()
+            elif scope == 'domain':
+                utils.warn('Deleted ' + i.base_url)
+                self.mmclient.delete_domain(i.mail_host)
+            elif scope == 'user':
+                utils.warn('Deleted ' + i.display_name)
+                i.delete()
+            self.refresh_lists()
+
+    def complete_delete(self, text, line, begidx, endidx):
+        if not text:
+            completions = self.scopes
+        else:
+            completions = [k
+                           for k in self.scopes
+                           if k.startswith(text)
+                           ]
+        return completions

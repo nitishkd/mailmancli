@@ -23,9 +23,9 @@ The shell can be used to display the mailman objects, using the show
 command.
 
 For example
-    show users
-    show domains
-    show lists
+    >>> show users
+    >>> show domains
+    >>> show lists
 
 Further, the CLI supports filtering of mailman objects based upon their
 attribute values or properties, using a `where` clause. For this, the CLI 
@@ -38,10 +38,10 @@ employs 3 filters, which are
 These filteres can be used in conjunction by using an `and` clause
 
 Examples:
-    show users where display_name = Foo
-    show users where display_name like .*Foo*
-    show lists where foo@bar.com in moderators
-    show lists where foo@bar.com in moderators and a@b.com in owners
+    >>> show users where display_name = Foo
+    >>> show users where display_name like .*Foo*
+    >>> show lists where foo@bar.com in moderators
+    >>> show lists where foo@bar.com in moderators and a@b.com in owners
 
 The Shell Environment
 ======================
@@ -52,9 +52,38 @@ make the querying easier.
 For using the shell, two commands, `set` and `unset` are used.
 
 Example
-  set useremail foo@bar.com
+
+    >>> set useremail foo@bar.com
 
 The variables can be used in the queries as follows
-  show lists where $useremail in moderators
+
+    >>> show lists where $useremail in moderators
 
 The `$username` will be replaced with the value of `useremail`
+
+The environment can be disabled using the `disable environemt`
+command, that prevents the CLI from replacing the query terms
+with environment variables, or appending of the specialised 
+variables.
+
+The disabled environment can be enabled using the `enable env`
+command.
+
+    >>> disable env
+    >>> enable env
+
+The environment supports a set of special variables, which denote 
+the names of the scopes available in mailman. They are domain, list and
+user.
+
+The special environment variables are appended automatically with relevant commands
+
+For example, if the environment variable domain is set to a domain name, then the
+`show list ` command automatically applies a domain = <set domain> filter to
+the result list.
+
+  >>> set domain domain.org
+  >>> show lists            //Shows lists under domain.org
+  >>> disable env           
+  >>> show lists            //Shows all lists
+  >>> enable env
