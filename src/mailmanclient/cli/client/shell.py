@@ -21,7 +21,7 @@ from core.users import Users
 from core.preferences import Preferences
 from lib.mailman_utils import MailmanUtils
 from lib.utils import Filter
-from lib.cmd_processors import preprocess_args, compile_args
+from lib.cmd_processors import preprocess_args, compile_args, validate_args
 
 utils = MailmanUtils()
 
@@ -35,11 +35,10 @@ class Shell(Cmd):
     scope_listing = {}
     mmclient = None
     data_filter = None
-    query_list = ['show']
     scopes = ['list', 'user', 'domain']
 
     def parseline(self, arguments):
-        args = self.add_default_vars(arguments)
+        args = preprocess_args(arguments, self.env_on, self.env)
         if not args:
             return ([], [], '')
         try:
@@ -47,25 +46,6 @@ class Shell(Cmd):
         except IndexError:
             pass
         return (args[0], args[1:], ' '.join(args))
-
-    def add_default_vars(self, arguments):
-        args = arguments.split()
-        if len(args) < 1:
-            return False
-        if 'where' not in arguments:
-            arguments += ' where '
-        else:
-            arguments += ' and '
-        if self.env_on and (args[0] in self.query_list):
-            if 'domain' in self.env:
-                if 'list' in args[1]:
-                    arguments += ' mail_host = ' + self.env['domain'] + ' and '
-            if 'list' in self.env:
-                arguments += ' list =' + self.env['list'] + ' and '
-            if 'user' in self.env:
-                arguments += ' domain =' + self.env['user'] + ' and '
-            args = preprocess_args(arguments)
-        return args
 
     def initialize(self):
         self.mmclient = utils.connect()
@@ -262,7 +242,7 @@ class Shell(Cmd):
                 cmd_arguments['domain'] = properties['domain']
                 cmd_arguments['contact'] = properties['contact']
             elif scope == 'user':
-                req_args = ['user', 'password', 'name']
+                req_args = ['email', 'password', 'name']
                 cmd_arguments['email'] = properties['email']
                 cmd_arguments['password'] = properties['password']
                 cmd_arguments['name'] = properties['name']
@@ -331,3 +311,63 @@ class Shell(Cmd):
                            if k.startswith(text)
                            ]
         return completions
+
+    def do_subscribe(self, args):
+        if len(args) < 2:
+            utils.error('Invalid number of arguments')
+            return False
+        if 'to' not in args:
+            utils.error('Invalid syntax. Expected to clause')
+            return False
+        args.reverse()
+        scope = args.pop()
+        if scope[-1] == 's':
+            # Manage Plurality
+            scope = scope[:-1]
+        users = []
+        list_name = None
+        user = args.pop()
+        while args and user != 'to':
+            users.append(user)
+            user = args.pop()
+        try:
+            list_name = args.pop()
+        except:
+            utils.error('Specify list name')
+            return False
+        user_object = self.scope_classes['user'](self.mmclient)
+        cmd_arguments = {}
+        cmd_arguments['users'] = users
+        cmd_arguments['list_name'] = list_name
+        cmd_arguments['quiet'] = False
+        user_object.subscribe(cmd_arguments)
+
+    def do_unsubscribe(self, args):
+        if len(args) < 2:
+            utils.error('Invalid number of arguments')
+            return False
+        if 'from' not in args:
+            utils.error('Invalid syntax. Expected from clause')
+            return False
+        args.reverse()
+        scope = args.pop()
+        if scope[-1] == 's':
+            # Manage Plurality
+            scope = scope[:-1]
+        users = []
+        list_name = None
+        user = args.pop()
+        while args and user != 'from':
+            users.append(user)
+            user = args.pop()
+        try:
+            list_name = args.pop()
+        except:
+            utils.error('Specify list name')
+            return False
+        user_object = self.scope_classes['user'](self.mmclient)
+        cmd_arguments = {}
+        cmd_arguments['users'] = users
+        cmd_arguments['list_name'] = list_name
+        cmd_arguments['quiet'] = False
+        user_object.unsubscribe(cmd_arguments)
