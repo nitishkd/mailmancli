@@ -80,6 +80,8 @@ class Filter():
             return self.like()
         elif self.operator == 'in':
             return self.in_list()
+        else:
+            raise Exception('Invalid operator: %s ' % (self.operator))
 
     def equality(self):
         copy_set = self.data_set[:]
@@ -99,7 +101,11 @@ class Filter():
         flag = False
         for i in self.data_set:
             try:
-                obj_value = getattr(i, self.key)
+                try:
+                    obj_value = getattr(i, self.key)
+                except:
+                    copy_set.remove(i)
+                    continue
                 if self.key == 'members':
                     for j in obj_value:
                         if self.value == str(j.email):

@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2.7
+#!/usr/bin/python
 
 # Copyright (C) 2010-2014 by the Free Software Foundation, Inc.
 #
@@ -33,5 +33,4 @@ try:
 except IndexError:
     s = Shell()
     s.initialize()
-    s.refresh_lists()
     s.cmdloop()

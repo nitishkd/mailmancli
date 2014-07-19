@@ -21,9 +21,10 @@ from core.users import Users
 from core.preferences import Preferences
 from lib.mailman_utils import MailmanUtils
 from lib.utils import Filter
-from lib.cmd_processors import preprocess_args, compile_args, validate_args
+from lib.cmd_preprocessors import Preprocessor
 
 utils = MailmanUtils()
+cmdprocessor = Preprocessor()
 
 
 class Shell(Cmd):
@@ -34,27 +35,53 @@ class Shell(Cmd):
     scope_classes = {}
     scope_listing = {}
     mmclient = None
-    data_filter = None
     scopes = ['list', 'user', 'domain']
+    line = None
 
-    def parseline(self, arguments):
-        args = preprocess_args(arguments, self.env_on, self.env)
-        if not args:
-            return ([], [], '')
+    def parseline(self, line):
+        """ This function sets the line attribute with the complete
+            command, which is used at the preprocessing stage"""
+        self.line = line
+        return Cmd.parseline(self, line)
+
+    def onecmd(self, s):
+        """ This method overided the Cmd.onecmd method, but eventully
+            calls the Cmd.onecmd function. The purpose of this function
+            is to catch the errors at a single point, rather that all
+            over the code.
+        """
         try:
-            args = compile_args(args, self.env_on, self.env)
-        except IndexError:
-            pass
-        return (args[0], args[1:], ' '.join(args))
+            return Cmd.onecmd(self, s)
+        except Exception as e:
+            utils.error(e)
+            return False
+
+    def emptyline(self):
+        """ Action on empty line entry. If not overridden, the shell executes last
+            command on encountering an empty line.
+        """
+        return False
 
     def initialize(self):
-        self.mmclient = utils.connect()
+        """ Method to initialize the shell. Two hash tables are initialised, one
+            for storing the class signatures of the mailman Objects and the
+            other to store the lists of each object.
+        """
+        try:
+            self.mmclient = utils.connect()
+        except Exception as e:
+            utils.error(e)
         self.scope_classes['list'] = Lists
         self.scope_classes['domain'] = Domains
         self.scope_classes['user'] = Users
         self.scope_classes['preference'] = Preferences
+        self.refresh_lists()
 
     def refresh_lists(self):
+        """ Refreshes the Mailman object list hash tables.
+            Invoke this method explicitly whenever the list contents might
+            get modified.
+        """
         self.scope_listing['list'] = self.mmclient.lists
         self.scope_listing['domain'] = self.mmclient.domains
         self.scope_listing['user'] = self.mmclient.users
@@ -64,20 +91,14 @@ class Shell(Cmd):
         print 'Bye!'
         exit(0)
 
+    @cmdprocessor.process
     def do_set(self, args):
-        self.env[args[0]] = args[1]
-        utils.warn('`%s` set to value `%s`' % (args[0], args[1]))
+        key = args.pop()
+        value = args.pop()
+        self.env[key] = value
+        utils.warn('`%s` set to value `%s`' % (key, value))
 
-    def complete_set(self, text, line, begidx, endidx):
-        if not text:
-            completions = self.env.keys()
-        else:
-            completions = [k
-                           for k in self.env.keys()
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_unset(self, args):
         if args[0] in self.env:
             del self.env[args[0]]
@@ -85,32 +106,14 @@ class Shell(Cmd):
         else:
             utils.error('Invalid Argument %s' % args[0])
 
-    def complete_unset(self, text, line, begidx, endidx):
-        if not text:
-            completions = self.env.keys()
-        else:
-            completions = [k
-                           for k in self.env.keys()
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_show_var(self, args):
         if args[0] in self.env:
             utils.emphasize('Value of %s : %s' % (args[0], self.env[args[0]]))
         else:
             utils.error('Invalid Argument %s' % args[0])
 
-    def complete_show_var(self, text, line, begidx, endidx):
-        if not text:
-            completions = self.env.keys()
-        else:
-            completions = [k
-                           for k in self.env.keys()
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_disable(self, args):
         if args[0] == 'env':
             self.env_on = False
@@ -118,17 +121,7 @@ class Shell(Cmd):
         else:
             utils.error('Invalid Argument %s' % args[0])
 
-    def complete_disable(self, text, line, begidx, endidx):
-        disable_list = ['env']
-        if not text:
-            completions = disable_list
-        else:
-            completions = [k
-                           for k in disable_list
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_enable(self, args):
         if args[0] == 'env':
             self.env_on = True
@@ -136,43 +129,25 @@ class Shell(Cmd):
         else:
             utils.error('Invalid Argument %s' % args[0])
 
-    def complete_enable(self, text, line, begidx, endidx):
-        enable_list = ['env']
-        if not text:
-            completions = enable_list
-        else:
-            completions = [k
-                           for k in enable_list
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_show(self, args):
-        if len(args) < 2:
-            utils.error('Invalid number of arguments')
-            return False
-        args.reverse()
         scope = args.pop()
         if args:
-            # Pop out `where`
             if args.pop() != 'where':
                 utils.error('Invalid syntax. Expected `where` clause')
                 return False
-        if scope[-1] == 's':
-            # Manage Plurality
-            scope = scope[:-1]
         filtered_list = self.scope_listing[scope]
         while args:
             try:
                 key = args.pop()
                 op = args.pop()
                 value = args.pop()
-                self.data_filter = Filter(key, value, op, filtered_list)
-                filtered_list = self.data_filter.get_results()
+                data_filter = Filter(key, value, op, filtered_list)
+                filtered_list = data_filter.get_results()
                 if not filtered_list:
                     return False
                 args.pop()
-            except:
+            except IndexError:
                 pass
         scope_object = self.scope_classes[scope](self.mmclient)
         cmd_arguments = {}
@@ -192,28 +167,13 @@ class Shell(Cmd):
             cmd_arguments['no_header'] = False
         scope_object.show(cmd_arguments, filtered_list)
 
-    def complete_show(self, text, line, begidx, endidx):
-        if not text:
-            completions = self.scopes
-        else:
-            completions = [k
-                           for k in self.scopes
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_create(self, args):
-        if len(args) < 2:
-            utils.error('Invalid number of arguments')
-            return False
-        args.reverse()
         scope = args.pop()
         if args:
             if args.pop() != 'where':
                 utils.error('Invalid syntax. Expected `where` clause')
                 return False
-        if scope[-1] == 's':
-            scope = scope[:-1]
         properties = {}
         while args:
             try:
@@ -252,24 +212,11 @@ class Shell(Cmd):
             for i in req_args:
                 utils.warn('\t' + i)
             return False
-        try:
-            scope_object.create(cmd_arguments)
-            self.refresh_lists()
-        except Exception as e:
-            utils.error(e)
+        scope_object.create(cmd_arguments)
+        self.refresh_lists()
 
-    def complete_create(self, text, line, begidx, endidx):
-        if not text:
-            completions = self.scopes
-        else:
-            completions = [k
-                           for k in self.scopes
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_delete(self, args):
-        args.reverse()
         scope = args.pop()
         if args:
             if args.pop() != 'where':
@@ -283,8 +230,8 @@ class Shell(Cmd):
                 key = args.pop()
                 op = args.pop()
                 value = args.pop()
-                self.data_filter = Filter(key, value, op, filtered_list)
-                filtered_list = self.data_filter.get_results()
+                data_filter = Filter(key, value, op, filtered_list)
+                filtered_list = data_filter.get_results()
                 if not filtered_list:
                     return False
                 args.pop()
@@ -302,28 +249,8 @@ class Shell(Cmd):
                 i.delete()
             self.refresh_lists()
 
-    def complete_delete(self, text, line, begidx, endidx):
-        if not text:
-            completions = self.scopes
-        else:
-            completions = [k
-                           for k in self.scopes
-                           if k.startswith(text)
-                           ]
-        return completions
-
+    @cmdprocessor.process
     def do_subscribe(self, args):
-        if len(args) < 2:
-            utils.error('Invalid number of arguments')
-            return False
-        if 'to' not in args:
-            utils.error('Invalid syntax. Expected to clause')
-            return False
-        args.reverse()
-        scope = args.pop()
-        if scope[-1] == 's':
-            # Manage Plurality
-            scope = scope[:-1]
         users = []
         list_name = None
         user = args.pop()
@@ -342,18 +269,8 @@ class Shell(Cmd):
         cmd_arguments['quiet'] = False
         user_object.subscribe(cmd_arguments)
 
+    @cmdprocessor.process
     def do_unsubscribe(self, args):
-        if len(args) < 2:
-            utils.error('Invalid number of arguments')
-            return False
-        if 'from' not in args:
-            utils.error('Invalid syntax. Expected from clause')
-            return False
-        args.reverse()
-        scope = args.pop()
-        if scope[-1] == 's':
-            # Manage Plurality
-            scope = scope[:-1]
         users = []
         list_name = None
         user = args.pop()
@@ -363,7 +280,7 @@ class Shell(Cmd):
         try:
             list_name = args.pop()
         except:
-            utils.error('Specify list name')
+            raise Exception('Specify list name')
             return False
         user_object = self.scope_classes['user'](self.mmclient)
         cmd_arguments = {}
@@ -371,3 +288,41 @@ class Shell(Cmd):
         cmd_arguments['list_name'] = list_name
         cmd_arguments['quiet'] = False
         user_object.unsubscribe(cmd_arguments)
+
+    def _complete(self, text, keys):
+        """ Method for computing the auto suggest suggestions
+        """
+        if not text:
+            completions = keys
+        else:
+            completions = [k
+                           for k in keys
+                           if k.startswith(text)
+                           ]
+        return completions
+
+    def complete_set(self, text, line, begidx, endidx):
+        return self._complete(text, self.env.keys())
+
+    def complete_unset(self, text, line, begidx, endidx):
+        return self._complete(text, self.env.keys())
+
+    def complete_show_var(self, text, line, begidx, endidx):
+        return self._complete(text, self.env.keys())
+
+    def complete_delete(self, text, line, begidx, endidx):
+        return self._complete(text, self.scopes)
+
+    def complete_create(self, text, line, begidx, endidx):
+        return self._complete(text, self.scopes)
+
+    def complete_show(self, text, line, begidx, endidx):
+        return self._complete(text, self.scopes)
+
+    def complete_disable(self, text, line, begidx, endidx):
+        disable_list = ['env']
+        return self._complete(text, disable_list)
+
+    def complete_enable(self, text, line, begidx, endidx):
+        enable_list = ['env']
+        return self._complete(text, enable_list)

@@ -87,3 +87,45 @@ the result list.
   >>> disable env           
   >>> show lists            //Shows all lists
   >>> enable env
+
+The value of stored variables can be viewed using the show_var command
+
+    >>> show_var domain
+
+Create Objects
+==============
+
+The Mailman objects can be created using the `create` command
+
+The create command accepts the object properties and creates 
+the object.
+
+If the supplied arguments are invalid or insufficient, the list
+of arguments that are required are displayed.
+
+The create command can be used as follows
+
+    >>> create list where fqdn_listname = list@domain.org
+    >>> create domain where domain = domain.org and contact = a@b.com
+    >>> create user where email = foo@bar.com and password = a and name = Foo
+
+Delete Objects
+==============
+
+The Mailman objects can be deleted using the delete command. The
+delete command supports the same filters as those by the show command.
+
+For example
+
+    >>> delete domain where domain like test_.*
+
+Subscription
+============
+
+The subscription commands include two commands, subscribe and
+unsubscribe users, which are respectively used to subscribe users to a
+list and unsubscribe users from a list. The commands allow applying 
+the action on a single user or multiple users at a time.
+
+    >>> subscribe users a@b.com foo@bar.com to list@domain.org
+    >>> unsubscribe users a@b.com foo@bar.com from list@domain.org
