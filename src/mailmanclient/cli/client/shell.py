@@ -54,6 +54,8 @@ class Shell(Cmd):
             return Cmd.onecmd(self, s)
         except Exception as e:
             utils.error(e)
+            command = s.split()[0]
+            self.do_help(command)
             return False
 
     def emptyline(self):
@@ -93,6 +95,10 @@ class Shell(Cmd):
 
     @cmdprocessor.process
     def do_set(self, args):
+        """Sets a variable in the environment
+ Usage:
+  set <variable> <value>
+        """
         key = args.pop()
         value = args.pop()
         self.env[key] = value
@@ -100,45 +106,56 @@ class Shell(Cmd):
 
     @cmdprocessor.process
     def do_unset(self, args):
+        """Delete a shell environment variable
+ Usage:
+  unset <var_name>"""
         if args[0] in self.env:
             del self.env[args[0]]
             utils.warn('Shell Variable %s Deleted' % args[0])
         else:
-            utils.error('Invalid Argument %s' % args[0])
+            raise Exception('Invalid Argument %s' % args[0])
 
     @cmdprocessor.process
     def do_show_var(self, args):
+        """Show a shell environment variable
+ Usage:
+  show_var <var_name>"""
         if args[0] in self.env:
             utils.emphasize('Value of %s : %s' % (args[0], self.env[args[0]]))
         else:
-            utils.error('Invalid Argument %s' % args[0])
+            raise Exception('Invalid Argument %s' % args[0])
 
     @cmdprocessor.process
     def do_disable(self, args):
-        if args[0] == 'env':
-            self.env_on = False
-            utils.emphasize('Environment variables disabled')
-        else:
-            utils.error('Invalid Argument %s' % args[0])
+        """Disable the shell environment
+ Usage:
+  disable env"""
+        self.env_on = False
+        utils.emphasize('Environment variables disabled')
 
     @cmdprocessor.process
     def do_enable(self, args):
-        if args[0] == 'env':
-            self.env_on = True
-            utils.emphasize('Environment variables enabled')
-        else:
-            utils.error('Invalid Argument %s' % args[0])
+        """Enable the shell environment
+ Usage:
+  enable env"""
+        self.env_on = True
+        utils.emphasize('Environment variables enabled')
 
     @cmdprocessor.process
     def do_show(self, args):
+        """Show requested mailman objects as a table
+ Usage:
+  show {domain|user|list} where <object_attribute> = <value>
+  show {domain|user|list} where <object_attribute> like <regex>
+  show {domain|user|list} where <key> in <list_attribute>
+  show {domain|user|list} where <filter2> and <filter2> ..."""
         scope = args.pop()
         if args:
-            if args.pop() != 'where':
-                utils.error('Invalid syntax. Expected `where` clause')
-                return False
+            args.pop()
         filtered_list = self.scope_listing[scope]
         while args:
             try:
+                key = value = op = None
                 key = args.pop()
                 op = args.pop()
                 value = args.pop()
@@ -169,11 +186,13 @@ class Shell(Cmd):
 
     @cmdprocessor.process
     def do_create(self, args):
+        """Creates mailman Objects
+ Usage:
+  create user where email = <email> and password = <passwd> and name = <name>
+  create domain where domain = <domain> and contact = <contact email>
+  create list where fqdn_listname = <list@domain>"""
         scope = args.pop()
-        if args:
-            if args.pop() != 'where':
-                utils.error('Invalid syntax. Expected `where` clause')
-                return False
+        args.pop()
         properties = {}
         while args:
             try:
@@ -183,14 +202,9 @@ class Shell(Cmd):
                 properties[key] = value
                 args.pop()
                 del op
-            except:
+            except IndexError:
                 pass
-        scope_object = None
-        try:
-            scope_object = self.scope_classes[scope](self.mmclient)
-        except:
-            utils.error('Invalid Scope')
-            return False
+        scope_object = self.scope_classes[scope](self.mmclient)
         cmd_arguments = {}
         req_args = []
         try:
@@ -207,8 +221,8 @@ class Shell(Cmd):
                 cmd_arguments['password'] = properties['password']
                 cmd_arguments['name'] = properties['name']
         except KeyError:
-            utils.error('Invalid number of arguments')
-            utils.warn('Required arguments:')
+            utils.error('Invalid arguments')
+            utils.warn('The required arguments are:')
             for i in req_args:
                 utils.warn('\t' + i)
             return False
@@ -217,16 +231,19 @@ class Shell(Cmd):
 
     @cmdprocessor.process
     def do_delete(self, args):
+        """Delete specified mailman objects
+ Usage:
+  delete {domain|user|list} where <object_attribute> = <value>
+  delete {domain|user|list} where <object_attribute> like <regex>
+  delete {domain|user|list} where <key> in <list_attribute>
+  delete {domain|user|list} where <filter1> and <filter2> ..."""
         scope = args.pop()
         if args:
-            if args.pop() != 'where':
-                utils.error('Invalid syntax. Expected `where` clause')
-                return False
-        if scope[-1] == 's':
-            scope = scope[:-1]
+            args.pop()
         filtered_list = self.scope_listing[scope]
         while args:
             try:
+                key = value = op = None
                 key = args.pop()
                 op = args.pop()
                 value = args.pop()
@@ -235,7 +252,7 @@ class Shell(Cmd):
                 if not filtered_list:
                     return False
                 args.pop()
-            except:
+            except IndexError:
                 pass
         for i in filtered_list:
             if scope == 'list':
@@ -251,18 +268,18 @@ class Shell(Cmd):
 
     @cmdprocessor.process
     def do_subscribe(self, args):
+        """Subscribes users to a list
+ Usage:
+  subscribe users <email1> <email2> ... to <list fqdn_name>"""
         users = []
         list_name = None
+        scope = args.pop()
         user = args.pop()
         while args and user != 'to':
             users.append(user)
             user = args.pop()
-        try:
-            list_name = args.pop()
-        except:
-            utils.error('Specify list name')
-            return False
-        user_object = self.scope_classes['user'](self.mmclient)
+        list_name = args.pop()
+        user_object = self.scope_classes[scope](self.mmclient)
         cmd_arguments = {}
         cmd_arguments['users'] = users
         cmd_arguments['list_name'] = list_name
@@ -271,8 +288,13 @@ class Shell(Cmd):
 
     @cmdprocessor.process
     def do_unsubscribe(self, args):
+        """ Unsubscribes users from a list
+ Usage:
+  unsubscribe users <email1> [<email2> ...] from <list fqdn_name>
+        """
         users = []
         list_name = None
+        scope = args.pop()
         user = args.pop()
         while args and user != 'from':
             users.append(user)
@@ -281,13 +303,55 @@ class Shell(Cmd):
             list_name = args.pop()
         except:
             raise Exception('Specify list name')
-            return False
-        user_object = self.scope_classes['user'](self.mmclient)
+        user_object = self.scope_classes[scope](self.mmclient)
         cmd_arguments = {}
         cmd_arguments['users'] = users
         cmd_arguments['list_name'] = list_name
         cmd_arguments['quiet'] = False
         user_object.unsubscribe(cmd_arguments)
+
+    @cmdprocessor.process
+    def do_update(self, args):
+        """Command to set preferences
+ Usage:
+   update preference <preference_name> to <value> globally
+
+   update preference <preference_name> to <value> for member where
+    email = foo@bar.com
+    and list = list@domain.org
+
+   update preference <preference_name> to <value>
+    for user where email = foo@bar.com
+
+   update preference <preference_name> to <value>
+    for address where email = foo@bar.com"""
+        scope = args.pop()
+        preferences = self.scope_classes[scope](self.mmclient)
+        cmd_arguments = {}
+        cmd_arguments['key'] = args.pop()
+        args.pop()
+        cmd_arguments['value'] = args.pop()
+        if args.pop() == 'globally':
+            cmd_arguments['update_scope'] = 'global'
+        else:
+            cmd_arguments['update_scope'] = args.pop()
+            args.pop()  # Pop where
+            if cmd_arguments['update_scope'] == 'member':
+                key = args.pop()
+                args.pop()
+                value = args.pop()
+                cmd_arguments[key] = value
+                args.pop()  # Pop `and`
+                key = args.pop()
+                args.pop()
+                value = args.pop()
+                cmd_arguments[key] = value
+            else:
+                key = args.pop()
+                args.pop()
+                value = args.pop()
+                cmd_arguments[key] = value
+        preferences.update(cmd_arguments)
 
     def _complete(self, text, keys):
         """ Method for computing the auto suggest suggestions
@@ -302,7 +366,9 @@ class Shell(Cmd):
         return completions
 
     def complete_set(self, text, line, begidx, endidx):
-        return self._complete(text, self.env.keys())
+        keys = self.env.keys()
+        keys.extend(self.scopes)
+        return self._complete(text, keys)
 
     def complete_unset(self, text, line, begidx, endidx):
         return self._complete(text, self.env.keys())
@@ -319,6 +385,12 @@ class Shell(Cmd):
     def complete_show(self, text, line, begidx, endidx):
         return self._complete(text, self.scopes)
 
+    def complete_subscribe(self, text, line, begidx, endidx):
+        return self._complete(text, ['user'])
+
+    def complete_unsubscribe(self, text, line, begidx, endidx):
+        return self._complete(text, ['user'])
+
     def complete_disable(self, text, line, begidx, endidx):
         disable_list = ['env']
         return self._complete(text, disable_list)
@@ -326,3 +398,7 @@ class Shell(Cmd):
     def complete_enable(self, text, line, begidx, endidx):
         enable_list = ['env']
         return self._complete(text, enable_list)
+
+    def complete_update(self, text, line, begidx, endidx):
+        _list = ['preference']
+        return self._complete(text, _list)

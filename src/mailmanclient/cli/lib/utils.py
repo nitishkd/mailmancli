@@ -37,6 +37,9 @@ class Colorizer():
     def emphasize(self, message):
         print "\033[92m%s\033[0m" % message
 
+    def return_emphasize(self, message):
+        return "\033[92m%s\033[0m" % message
+
 
 class Utils(Colorizer):
     """ General utilities to be used across the CLI """
@@ -90,10 +93,9 @@ class Filter():
                 obj_value = getattr(i, self.key)
                 if obj_value != self.value:
                     copy_set.remove(i)
-            except:
+            except AttributeError:
                 if self.key not in ['domain', 'user', 'list']:
-                    self.utils.error('Invalid filter : %s' % self.key)
-                    return False
+                    raise Exception('Invalid filter : %s' % self.key)
         return copy_set
 
     def in_list(self):
@@ -102,33 +104,38 @@ class Filter():
         for i in self.data_set:
             try:
                 try:
-                    obj_value = getattr(i, self.key)
-                except:
+                    the_list = getattr(i, self.key)
+                except KeyError:
                     copy_set.remove(i)
                     continue
                 if self.key == 'members':
-                    for j in obj_value:
+                    for j in the_list:
                         if self.value == str(j.email):
                             flag = True
                             break
                 elif self.key == 'lists':
-                    for j in obj_value:
+                    for j in the_list:
                         if ((self.value == str(j.list_id))
                            or (self.value == str(j.fqdn_listname))):
                             flag = True
                             break
+                elif self.key == 'subscriptions':
+                    self.value = self.value.replace('@', '.')
+                    for j in the_list:
+                        if (self.value == str(j.list_id)):
+                            flag = True
+                            break
                 else:
-                    for j in obj_value:
+                    for j in the_list:
                         if self.value == str(j):
                             flag = True
                             break
                 if not flag:
                     copy_set.remove(i)
                 flag = False
-            except:
+            except AttributeError:
                 if self.key not in ['domain', 'user', 'list']:
-                    self.utils.error('Invalid filter : %s' % self.key)
-                    return False
+                    raise Exception('Invalid filter : %s' % self.key)
         return copy_set
 
     def like(self):
@@ -141,14 +148,17 @@ class Filter():
             return False
         for i in self.data_set:
             try:
-                obj_value = getattr(i, self.key)
+                obj_value = None
+                try:
+                    obj_value = getattr(i, self.key)
+                except KeyError:
+                    copy_set.remove(i)
                 obj_value = str(obj_value).lower()
                 if not pattern.match(obj_value):
                     copy_set.remove(i)
-            except:
+            except AttributeError:
                 if self.key not in ['domain', 'user', 'list']:
-                    self.utils.error('Invalid filter : %s' % self.key)
-                    return
+                    raise Exception('Invalid filter : %s' % self.key)
         return copy_set
 
 

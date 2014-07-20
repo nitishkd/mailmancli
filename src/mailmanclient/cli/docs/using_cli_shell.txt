@@ -129,3 +129,20 @@ the action on a single user or multiple users at a time.
 
     >>> subscribe users a@b.com foo@bar.com to list@domain.org
     >>> unsubscribe users a@b.com foo@bar.com from list@domain.org
+
+Update Preferences
+==================
+
+Preferences can be updated using the shell for the following domains
+    1. Globally
+    2. Users
+    3. Members
+    4. Addresses
+
+The actions are performed using the update command which can be used as follows
+    >>> update preference <preference_name> to <value> globally
+    >>> update preference <preference_name> to <value> for member where email = foo@bar.com 
+        and list = list@domain.org
+    >>> update preference <preference_name> to <value> for user where email = foo@bar.com
+    >>> update preference <preference_name> to <value> for address where email = foo@bar.com
+

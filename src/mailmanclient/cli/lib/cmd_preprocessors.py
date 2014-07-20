@@ -16,9 +16,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
-from lib.mailman_utils import MailmanUtils
+import os
+import re
+from ConfigParser import ConfigParser
+from lib.utils import Utils
 
-utils = MailmanUtils()
+utils = Utils()
 
 
 class Preprocessor():
@@ -38,8 +41,13 @@ class Preprocessor():
             self.line = obj.line
             if self.initialize():
                 self.processor()
+            if self.arguments[-1] in ['where', 'and']:
+                self.arguments.pop()
+            self.line = ' '.join(self.arguments)
+            self.validate_syntax()
             self.terminate()
             return action(obj, self.arguments)
+        wrapper.__doc__ = utils.return_emphasize(action.__doc__)
         return wrapper
 
     def initialize(self):
@@ -56,6 +64,8 @@ class Preprocessor():
         self.line = self.line.replace("'", ' ')
         self.line = self.line.replace('"', ' ')
         self.arguments = self.line.split()
+        if len(self.arguments) < 2:
+            raise Exception('Invalid number of arguments')
         self.command = self.arguments[0]
         try:
             self.processor = getattr(self, 'preprocess_' + self.command)
@@ -70,35 +80,16 @@ class Preprocessor():
         return scope
 
     def preprocess_subscribe(self):
-        if self.arguments[-2] != 'to':
-            utils.error('Invalid Syntax, expected `to` clause')
-            return False
-        self.arguments = self.arguments[1:]
-        scope = self.arguments[0]
-        scope = self.stem(scope)
-        self.arguments[0] = scope
-        if scope != 'user':
-            raise Exception('Invalid Scope : %s ' % (scope))
-            return False
+        if 'to' not in self.arguments:
+            if self.shell.env_on and 'list' in self.shell.env:
+                self.arguments.extend(['to', self.shell.env['list']])
 
     def preprocess_unsubscribe(self):
-        if self.arguments[-2] != 'from':
-            utils.error('Invalid Syntax, expected `from` clause')
-            return False
-        self.arguments = self.arguments[1:]
-        scope = self.arguments[0]
-        scope = self.stem(scope)
-        self.arguments[0] = scope
-        if scope != 'user':
-            utils.error('Invalid Scope')
-            return False
+        if 'from' not in self.arguments:
+            if self.shell.env_on and 'list' in self.shell.env:
+                self.arguments.extend(['from', self.shell.env['list']])
 
-    def preprocess_show(self):
-        nargs = len(self.arguments)
-        if nargs < 2:
-            raise Exception('Invalid number of arguments')
-        if 'where' in self.arguments and nargs < 6:
-            raise Exception('Invalid syntax: expected filter after `where`')
+    def preprocess_delete(self):
         scope = self.arguments[1]
         scope = self.stem(scope)
         self.arguments[1] = scope
@@ -112,18 +103,36 @@ class Preprocessor():
                     self.arguments.extend(['mail_host', '=',
                                            self.shell.env['domain'],
                                            'and'])
+            elif scope == 'user':
+                if 'list' in self.shell.env:
+                    self.arguments.extend([self.shell.env['list'], 'in',
+                                           'subscriptions', 'and'])
 
-    def preprocess_enable(self):
-        nargs = len(self.arguments)
-        if nargs != 2:
-            raise Exception('Invalid number of arguments')
+    def preprocess_show(self):
+        scope = self.arguments[1]
+        scope = self.stem(scope)
+        self.arguments[1] = scope
+        if self.shell.env_on:
+            if 'where' not in self.arguments:
+                self.arguments.append('where')
+            else:
+                self.arguments.append('and')
+            if scope == 'list':
+                if 'domain' in self.shell.env:
+                    self.arguments.extend(['mail_host', '=',
+                                           self.shell.env['domain'],
+                                           'and'])
+            elif scope == 'user':
+                if 'list' in self.shell.env:
+                    self.arguments.extend([self.shell.env['list'], 'in',
+                                           'subscriptions', 'and'])
 
     def preprocess_set(self):
         if '=' in self.arguments:
             self.arguments.remove('=')
-        nargs = len(self.arguments)
-        if nargs != 3:
-            raise Exception('Invalid number of arguments')
+
+    def preprocess_update(self):
+        pass
 
     def terminate(self):
         """ Final processing of commands, resolves the environment variables,
@@ -142,3 +151,18 @@ class Preprocessor():
         self.arguments = processed_args
         self.arguments.reverse()
         self.arguments.pop()
+
+    def validate_syntax(self):
+        cfgparser = ConfigParser()
+        cfgparser.read(os.path.dirname(__file__) + '/../config.ini')
+        expression = None
+        try:
+            expression = cfgparser.get('COMMAND_REGEX', self.command).strip()
+        except:
+            return True
+        compiled = re.compile(expression)
+        match = compiled.match(self.line)
+        if match:
+            return True
+        else:
+            raise SyntaxError('Invalid syntax')

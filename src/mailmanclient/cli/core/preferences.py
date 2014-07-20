@@ -47,7 +47,7 @@ class Preferences():
             else:
                 scope_object = self.client.get_address(args['email'])
         except:
-            raise PreferenceException('%s not found %s' % scope.capitalize())
+            raise PreferenceException('%s not found' % scope.capitalize())
         return scope_object
 
     def update(self, args):
