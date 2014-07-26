@@ -21,10 +21,8 @@ from core.users import Users
 from core.preferences import Preferences
 from lib.mailman_utils import MailmanUtils
 from lib.utils import Filter
-from lib.cmd_preprocessors import Preprocessor
 
 utils = MailmanUtils()
-cmdprocessor = Preprocessor()
 
 
 class Shell(Cmd):
@@ -71,13 +69,14 @@ class Shell(Cmd):
         """
         try:
             self.mmclient = utils.connect()
+            self.scope_classes['list'] = Lists
+            self.scope_classes['domain'] = Domains
+            self.scope_classes['user'] = Users
+            self.scope_classes['preference'] = Preferences
+            self.refresh_lists()
         except Exception as e:
             utils.error(e)
-        self.scope_classes['list'] = Lists
-        self.scope_classes['domain'] = Domains
-        self.scope_classes['user'] = Users
-        self.scope_classes['preference'] = Preferences
-        self.refresh_lists()
+            exit(1)
 
     def refresh_lists(self):
         """ Refreshes the Mailman object list hash tables.
@@ -93,79 +92,86 @@ class Shell(Cmd):
         print 'Bye!'
         exit(0)
 
-    @cmdprocessor.process
     def do_set(self, args):
         """Sets a variable in the environment
  Usage:
-  set <variable> <value>
+  set `<variable>` = `<value>`
         """
-        key = args.pop()
-        value = args.pop()
+        from client.parsers._set import Set
+        parser = Set()
+        arguments = parser.parse(self)
+        key = arguments['key']
+        value = utils.add_shell_vars(arguments['value'], self)
         self.env[key] = value
         utils.warn('`%s` set to value `%s`' % (key, value))
 
-    @cmdprocessor.process
     def do_unset(self, args):
         """Delete a shell environment variable
  Usage:
-  unset <var_name>"""
-        if args[0] in self.env:
-            del self.env[args[0]]
-            utils.warn('Shell Variable %s Deleted' % args[0])
+  unset `<var_name>`"""
+        from client.parsers.unset import Unset
+        parser = Unset()
+        arguments = parser.parse(self)
+        key = arguments['key']
+        if key in self.env:
+            del self.env[key]
+            utils.warn('Shell Variable `%s` Deleted' % key)
         else:
-            raise Exception('Invalid Argument %s' % args[0])
+            raise Exception('Invalid Argument `%s`' % key)
 
-    @cmdprocessor.process
     def do_show_var(self, args):
         """Show a shell environment variable
  Usage:
-  show_var <var_name>"""
-        if args[0] in self.env:
-            utils.emphasize('Value of %s : %s' % (args[0], self.env[args[0]]))
+  show_var `<var_name>`"""
+        from client.parsers.show_var import ShowVar
+        parser = ShowVar()
+        arguments = parser.parse(self)
+        key = arguments['key']
+        if key in self.env:
+            utils.emphasize('Value of %s : %s' % (key, self.env[key]))
         else:
-            raise Exception('Invalid Argument %s' % args[0])
+            raise Exception('Invalid Argument %s' % key)
 
-    @cmdprocessor.process
     def do_disable(self, args):
         """Disable the shell environment
  Usage:
   disable env"""
+        from client.parsers.disable import Disable
+        parser = Disable()
+        parser.parse(self)
         self.env_on = False
         utils.emphasize('Environment variables disabled')
 
-    @cmdprocessor.process
     def do_enable(self, args):
         """Enable the shell environment
  Usage:
   enable env"""
+        from client.parsers.enable import Enable
+        parser = Enable()
+        parser.parse(self)
         self.env_on = True
         utils.emphasize('Environment variables enabled')
 
-    @cmdprocessor.process
     def do_show(self, args):
         """Show requested mailman objects as a table
  Usage:
-  show {domain|user|list} where <object_attribute> = <value>
-  show {domain|user|list} where <object_attribute> like <regex>
-  show {domain|user|list} where <key> in <list_attribute>
+  show {domain|user|list} where `<object_attribute>` = `<value>`
+  show {domain|user|list} where `<object_attribute>` like `<regex>`
+  show {domain|user|list} where `<key>` in `<list_attribute>`
   show {domain|user|list} where <filter2> and <filter2> ..."""
-        scope = args.pop()
-        if args:
-            args.pop()
+        from client.parsers.show import Show
+        parser = Show()
+        arguments = parser.parse(self)
+        scope = arguments['scope']
         filtered_list = self.scope_listing[scope]
-        while args:
-            try:
-                key = value = op = None
-                key = args.pop()
-                op = args.pop()
-                value = args.pop()
+        if 'filters' in arguments:
+            for i in arguments['filters']:
+                key, op, value = i
+                value = utils.add_shell_vars(value, self)
                 data_filter = Filter(key, value, op, filtered_list)
                 filtered_list = data_filter.get_results()
                 if not filtered_list:
                     return False
-                args.pop()
-            except IndexError:
-                pass
         scope_object = self.scope_classes[scope](self.mmclient)
         cmd_arguments = {}
         if scope == 'list':
@@ -184,42 +190,33 @@ class Shell(Cmd):
             cmd_arguments['no_header'] = False
         scope_object.show(cmd_arguments, filtered_list)
 
-    @cmdprocessor.process
     def do_create(self, args):
         """Creates mailman Objects
  Usage:
-  create user where email = <email> and password = <passwd> and name = <name>
-  create domain where domain = <domain> and contact = <contact email>
-  create list where fqdn_listname = <list@domain>"""
-        scope = args.pop()
-        args.pop()
-        properties = {}
-        while args:
-            try:
-                key = args.pop()
-                op = args.pop()
-                value = args.pop()
-                properties[key] = value
-                args.pop()
-                del op
-            except IndexError:
-                pass
+  create user with `email` = `<email>` and `password` = `<passwd>` and `name` = `<name>`
+  create domain with `domain` = `<domain>` and `contact` = `<contact email>`
+  create list with `fqdn_listname` = `<list@domain>`"""
+        from client.parsers.create import Create
+        parser = Create()
+        arguments = parser.parse(self)
+        scope = arguments['scope']
+        properties = arguments['properties']
         scope_object = self.scope_classes[scope](self.mmclient)
         cmd_arguments = {}
         req_args = []
         try:
             if scope == 'list':
                 req_args = ['fqdn_listname']
-                cmd_arguments['list'] = properties['fqdn_listname']
+                cmd_arguments['list'] = utils.add_shell_vars(properties['fqdn_listname'], self)
             elif scope == 'domain':
                 req_args = ['domain', 'contact']
-                cmd_arguments['domain'] = properties['domain']
-                cmd_arguments['contact'] = properties['contact']
+                cmd_arguments['domain'] = utils.add_shell_vars(properties['domain'], self)
+                cmd_arguments['contact'] = utils.add_shell_vars(properties['contact'])
             elif scope == 'user':
                 req_args = ['email', 'password', 'name']
-                cmd_arguments['email'] = properties['email']
-                cmd_arguments['password'] = properties['password']
-                cmd_arguments['name'] = properties['name']
+                cmd_arguments['email'] = utils.add_shell_vars(properties['email'], self)
+                cmd_arguments['password'] = utils.add_shell_vars(properties['password'], self)
+                cmd_arguments['name'] = utils.add_shell_vars(properties['name'], self)
         except KeyError:
             utils.error('Invalid arguments')
             utils.warn('The required arguments are:')
@@ -229,31 +226,29 @@ class Shell(Cmd):
         scope_object.create(cmd_arguments)
         self.refresh_lists()
 
-    @cmdprocessor.process
     def do_delete(self, args):
         """Delete specified mailman objects
  Usage:
-  delete {domain|user|list} where <object_attribute> = <value>
-  delete {domain|user|list} where <object_attribute> like <regex>
-  delete {domain|user|list} where <key> in <list_attribute>
+  delete {domain|user|list} where `<object_attribute>` = `<value>`
+  delete {domain|user|list} where `<object_attribute>` like `<regex>`
+  delete {domain|user|list} where `<key>` in `<list_attribute>`
   delete {domain|user|list} where <filter1> and <filter2> ..."""
-        scope = args.pop()
-        if args:
-            args.pop()
+        from client.parsers.delete import Delete
+        parser = Delete()
+        arguments = parser.parse(self)
+        scope = arguments['scope']
         filtered_list = self.scope_listing[scope]
-        while args:
-            try:
-                key = value = op = None
-                key = args.pop()
-                op = args.pop()
-                value = args.pop()
+        if 'filters' in arguments:
+            for i in arguments['filters']:
+                key, op, value = i
+                value = utils.add_shell_vars(value, self)
                 data_filter = Filter(key, value, op, filtered_list)
                 filtered_list = data_filter.get_results()
-                if not filtered_list:
-                    return False
-                args.pop()
-            except IndexError:
-                pass
+        if 'filters' in arguments and arguments['filters'] == []:
+            utils.confirm('Delete all %ss?[y/n]' % scope)
+            ans = raw_input()
+            if ans == 'n':
+                return False
         for i in filtered_list:
             if scope == 'list':
                 utils.warn('Deleted ' + i.fqdn_listname)
@@ -266,91 +261,75 @@ class Shell(Cmd):
                 i.delete()
             self.refresh_lists()
 
-    @cmdprocessor.process
     def do_subscribe(self, args):
         """Subscribes users to a list
  Usage:
-  subscribe users <email1> <email2> ... to <list fqdn_name>"""
-        users = []
-        list_name = None
-        scope = args.pop()
-        user = args.pop()
-        while args and user != 'to':
-            users.append(user)
-            user = args.pop()
-        list_name = args.pop()
-        user_object = self.scope_classes[scope](self.mmclient)
+  subscribe users `<email1>` `<email2>` ... to `<list fqdn_name>`"""
+        from client.parsers.subscribe import Subscribe
+        parser = Subscribe()
+        arguments = parser.parse(self)
+        users = arguments['users']
+        cleaned_list = []
+        for i in users:
+            cleaned_list.append(utils.add_shell_vars(i, self))
+        users = cleaned_list
+        list_name = utils.add_shell_vars(arguments['list'], self)
+        user_object = self.scope_classes['user'](self.mmclient)
         cmd_arguments = {}
         cmd_arguments['users'] = users
         cmd_arguments['list_name'] = list_name
         cmd_arguments['quiet'] = False
         user_object.subscribe(cmd_arguments)
 
-    @cmdprocessor.process
     def do_unsubscribe(self, args):
         """ Unsubscribes users from a list
  Usage:
-  unsubscribe users <email1> [<email2> ...] from <list fqdn_name>
+  unsubscribe users `<email1>` [`<email2>` ...] from `<list fqdn_name>`
         """
-        users = []
-        list_name = None
-        scope = args.pop()
-        user = args.pop()
-        while args and user != 'from':
-            users.append(user)
-            user = args.pop()
-        try:
-            list_name = args.pop()
-        except:
-            raise Exception('Specify list name')
-        user_object = self.scope_classes[scope](self.mmclient)
+        from client.parsers.unsubscribe import Unsubscribe
+        parser = Unsubscribe()
+        arguments = parser.parse(self)
+        users = arguments['users']
+        cleaned_list = []
+        for i in users:
+            cleaned_list.append(utils.add_shell_vars(i, self))
+        users = cleaned_list
+        list_name = utils.add_shell_vars(arguments['list'], self)
+        user_object = self.scope_classes['user'](self.mmclient)
         cmd_arguments = {}
         cmd_arguments['users'] = users
         cmd_arguments['list_name'] = list_name
         cmd_arguments['quiet'] = False
         user_object.unsubscribe(cmd_arguments)
 
-    @cmdprocessor.process
     def do_update(self, args):
         """Command to set preferences
  Usage:
-   update preference <preference_name> to <value> globally
+   update preference `<preference_name>` to `<value>` globally
 
-   update preference <preference_name> to <value> for member where
-    email = foo@bar.com
-    and list = list@domain.org
+   update preference `<preference_name>` to `<value>` for member with
+    `email` = `foo@bar.com`
+    and `list` = `list@domain.org`
 
-   update preference <preference_name> to <value>
-    for user where email = foo@bar.com
+   update preference `<preference_name>` to `<value>`
+    for user with `email` = `foo@bar.com`
 
-   update preference <preference_name> to <value>
-    for address where email = foo@bar.com"""
-        scope = args.pop()
-        preferences = self.scope_classes[scope](self.mmclient)
+   update preference `<preference_name>` to `<value>`
+    for address with `email` = `foo@bar.com`"""
+        from client.parsers.update import Update
+        parser = Update()
+        arguments = parser.parse(self)
+        scope = arguments['scope']
+        preferences = self.scope_classes['preference'](self.mmclient)
         cmd_arguments = {}
-        cmd_arguments['key'] = args.pop()
-        args.pop()
-        cmd_arguments['value'] = args.pop()
-        if args.pop() == 'globally':
+        cmd_arguments['key'] = arguments['key']
+        cmd_arguments['value'] = arguments['value']
+        if scope == 'globally':
             cmd_arguments['update_scope'] = 'global'
         else:
-            cmd_arguments['update_scope'] = args.pop()
-            args.pop()  # Pop where
-            if cmd_arguments['update_scope'] == 'member':
-                key = args.pop()
-                args.pop()
-                value = args.pop()
-                cmd_arguments[key] = value
-                args.pop()  # Pop `and`
-                key = args.pop()
-                args.pop()
-                value = args.pop()
-                cmd_arguments[key] = value
-            else:
-                key = args.pop()
-                args.pop()
-                value = args.pop()
-                cmd_arguments[key] = value
+            cmd_arguments['update_scope'] = scope
+        for i in arguments['filters']:
+            cmd_arguments[i] = utils.add_shell_vars(arguments['filters'][i], self)
         preferences.update(cmd_arguments)
 
     def _complete(self, text, keys):

@@ -72,8 +72,6 @@ class Filter():
         self.key = key
         self.value = value
         self.operator = operator
-        if operator == 'in':
-            self.key, self.value = self.value, self.key
         self.data_set = data
 
     def get_results(self):
@@ -94,8 +92,7 @@ class Filter():
                 if obj_value != self.value:
                     copy_set.remove(i)
             except AttributeError:
-                if self.key not in ['domain', 'user', 'list']:
-                    raise Exception('Invalid filter : %s' % self.key)
+                raise Exception('Invalid filter : %s' % self.key)
         return copy_set
 
     def in_list(self):
@@ -134,8 +131,7 @@ class Filter():
                     copy_set.remove(i)
                 flag = False
             except AttributeError:
-                if self.key not in ['domain', 'user', 'list']:
-                    raise Exception('Invalid filter : %s' % self.key)
+                raise Exception('Invalid filter : %s' % self.key)
         return copy_set
 
     def like(self):

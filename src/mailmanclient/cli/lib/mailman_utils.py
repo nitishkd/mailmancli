@@ -53,3 +53,26 @@ class MailmanUtils(Utils):
                 continue
             except Exception:
                 return domain_name
+
+    def add_shell_vars(self, arg, shell):
+        if not shell.env_on or not arg:
+            return arg
+        if arg[0] == '$' and arg[1:] in shell.env:
+                arg = shell.env[arg[1:]]
+        return arg
+
+    def add_reserved_vars(self, args, shell):
+        scope = args['scope']
+        if 'filters' not in args:
+            args['filters'] = []
+        if not shell.env_on:
+            return args
+        filters = args['filters']
+        if scope == 'list':
+            if 'domain' in shell.env:
+                filters.append(('mail_host', '=', shell.env['domain']))
+        elif scope == 'user':
+            if 'list' in shell.env:
+                filters.append((shell.env['list'], 'in', 'subscriptions'))
+        args['filters'] = filters
+        return args

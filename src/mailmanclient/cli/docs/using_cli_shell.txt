@@ -38,10 +38,10 @@ employs 3 filters, which are
 These filteres can be used in conjunction by using an `and` clause
 
 Examples:
-    >>> show users where display_name = Foo
-    >>> show users where display_name like .*Foo*
-    >>> show lists where foo@bar.com in moderators
-    >>> show lists where foo@bar.com in moderators and a@b.com in owners
+    >>> show users where `display_name` = `Foo`
+    >>> show users where `display_name` like `.*Foo*`
+    >>> show lists where `foo@bar.com` in `moderators`
+    >>> show lists where `foo@bar.com` in `moderators` and `a@b.com` in `owners`
 
 The Shell Environment
 ======================
@@ -53,11 +53,11 @@ For using the shell, two commands, `set` and `unset` are used.
 
 Example
 
-    >>> set useremail foo@bar.com
+    >>> set `useremail` = `foo@bar.com`
 
 The variables can be used in the queries as follows
 
-    >>> show lists where $useremail in moderators
+    >>> show lists where `$useremail` in `moderators`
 
 The `$username` will be replaced with the value of `useremail`
 
@@ -82,7 +82,7 @@ For example, if the environment variable domain is set to a domain name, then th
 `show list ` command automatically applies a domain = <set domain> filter to
 the result list.
 
-  >>> set domain domain.org
+  >>> set `domain` = `domain.org`
   >>> show lists            //Shows lists under domain.org
   >>> disable env           
   >>> show lists            //Shows all lists
@@ -90,7 +90,7 @@ the result list.
 
 The value of stored variables can be viewed using the show_var command
 
-    >>> show_var domain
+    >>> show_var `domain`
 
 Create Objects
 ==============
@@ -105,9 +105,9 @@ of arguments that are required are displayed.
 
 The create command can be used as follows
 
-    >>> create list where fqdn_listname = list@domain.org
-    >>> create domain where domain = domain.org and contact = a@b.com
-    >>> create user where email = foo@bar.com and password = a and name = Foo
+    >>> create list where `fqdn_listname` = `list@domain.org`
+    >>> create domain where `domain` = `domain.org` and `contact` = `a@b.com`
+    >>> create user where `email` = `foo@bar.com` and `password` = `a` and `name` = `Foo`
 
 Delete Objects
 ==============
@@ -117,7 +117,7 @@ delete command supports the same filters as those by the show command.
 
 For example
 
-    >>> delete domain where domain like test_.*
+    >>> delete domain where `domain` like `test_.*`
 
 Subscription
 ============
@@ -127,8 +127,8 @@ unsubscribe users, which are respectively used to subscribe users to a
 list and unsubscribe users from a list. The commands allow applying 
 the action on a single user or multiple users at a time.
 
-    >>> subscribe users a@b.com foo@bar.com to list@domain.org
-    >>> unsubscribe users a@b.com foo@bar.com from list@domain.org
+    >>> subscribe users `a@b.com` `foo@bar.com` to `list@domain.org`
+    >>> unsubscribe users `a@b.com` `foo@bar.com` from `list@domain.org`
 
 Update Preferences
 ==================
@@ -140,9 +140,9 @@ Preferences can be updated using the shell for the following domains
     4. Addresses
 
 The actions are performed using the update command which can be used as follows
-    >>> update preference <preference_name> to <value> globally
-    >>> update preference <preference_name> to <value> for member where email = foo@bar.com 
-        and list = list@domain.org
-    >>> update preference <preference_name> to <value> for user where email = foo@bar.com
-    >>> update preference <preference_name> to <value> for address where email = foo@bar.com
+    >>> update preference `<preference_name>` to `<value>` globally
+    >>> update preference `<preference_name>` to `<value>` for member with `email` = `foo@bar.com`
+        and `list` = `list@domain.org`
+    >>> update preference `<preference_name>` to `<value>` for user with `email` = `foo@bar.com`
+    >>> update preference `<preference_name>` to `<value>` for address with `email` = `foo@bar.com`
 

@@ -61,6 +61,10 @@ class Preferences():
         key = args['key']
         value = args['value']
         preferences = scope_object.preferences
+        try:
+            preferences[key]
+        except Exception:
+            raise PreferenceException('Saving Preference Failed')
         if type(preferences[key]).__name__ in ('bool', 'NoneType'):
             value = value.lower().strip()
             if value == 'true':
