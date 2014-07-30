@@ -18,6 +18,7 @@
 
 import re
 import sys
+import csv
 from hashlib import sha1
 from datetime import datetime
 
@@ -59,6 +60,20 @@ class Utils(Colorizer):
         table.append(['', ''])
         table.append([heading, ''])
         table.append(['=============', ''])
+
+    def write_csv(self, table, headers, filename):
+        if table == []:
+            return
+        if 'csv' not in filename:
+            filename += '.csv'
+        f = open(filename, 'wb')
+        writer = csv.writer(f, quoting = csv.QUOTE_ALL)
+        if headers:
+            writer.writerow(headers)
+        for row in table:
+            writer.writerow(row)
+        f.close()
+        return
 
 
 class Filter():

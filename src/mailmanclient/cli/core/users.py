@@ -137,7 +137,10 @@ class Users():
             table = table[1:]
         except IndexError:
             table = []
-        print tabulate(table, headers=headers, tablefmt='plain')
+        if args['csv']:
+            utils.write_csv(table, headers, args['csv'])
+        else:
+            print tabulate(table, headers=headers, tablefmt='plain')
 
     def describe(self, args):
         ''' Describes a user object '''

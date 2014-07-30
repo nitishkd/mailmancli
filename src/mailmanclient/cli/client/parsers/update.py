@@ -60,7 +60,7 @@ class Update(Parser):
         return t
 
     def t_STRING(self, t):
-        r'`([a-zA-Z0-9_@\.\*\-\$]*)`'
+        r'`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
         t.value = t.value.replace('`', '')
         return t
 

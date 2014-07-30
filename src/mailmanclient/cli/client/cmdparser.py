@@ -52,6 +52,8 @@ class CmdParser():
         show_list.add_argument('--no-header',
                                help='Omit headings in detailed listing',
                                action='store_true')
+        show_list.add_argument('--csv',
+                               help='Output as CSV, Specify filename')
 
         # Show domains
         show_domain = scope.add_parser('domain')
@@ -65,6 +67,8 @@ class CmdParser():
         show_domain.add_argument('--no-header',
                                  help='Omit headings in detailed listing',
                                  action='store_true')
+        show_domain.add_argument('--csv',
+                               help='Output as CSV, Specify filename')
 
         # Show users
         show_user = scope.add_parser('user')
@@ -82,6 +86,9 @@ class CmdParser():
                                '--list',
                                help='Specify list name',
                                dest='list_name')
+        show_user.add_argument('--csv',
+                               help='Output as CSV, Specify filename')
+
         # Show preferences
         preferences = ['receive_list_copy', 'hide_address',
                        'preferred_language', 'acknowledge_posts',
