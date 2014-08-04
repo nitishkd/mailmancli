@@ -15,13 +15,14 @@
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import ArgumentParser
-from core.lists import Lists
-from core.users import Users
-from lib.utils import Colorizer
-from mailmanclient import Client
-from core.domains import Domains
-from core.preferences import Preferences
-from mailmanclient._client import MailmanConnectionError
+from mailmanclient.cli.core.misc import Misc
+from mailmanclient.cli.core.users import Users
+from mailmanclient.cli.core.lists import Lists
+from mailmanclient.cli.core.domains import Domains
+from mailmanclient.cli.core.preferences import Preferences
+from mailmanclient.cli.lib.mailman_utils import MailmanUtils
+
+utils = MailmanUtils()
 
 
 class CmdParser():
@@ -68,7 +69,7 @@ class CmdParser():
                                  help='Omit headings in detailed listing',
                                  action='store_true')
         show_domain.add_argument('--csv',
-                               help='Output as CSV, Specify filename')
+                                 help='Output as CSV, Specify filename')
 
         # Show users
         show_user = scope.add_parser('user')
@@ -312,39 +313,49 @@ class CmdParser():
                                        choices=preferences)
         update_preference.add_argument('value',
                                        help='Specify setting value')
+        # Backup Tool
+        action_backup = action.add_parser('backup')
+        action_backup.add_argument('output',
+                                   help='Specify file to write backup')
+
+        # Restore Tool
+        action_backup = action.add_parser('restore')
+        action_backup.add_argument('backup',
+                                   help='Specify backup file location')
         # Global options
-        parser.add_argument('--host', help='REST API host address',
-                            default='http://127.0.0.1')
-        parser.add_argument('--port', help='REST API host port',
-                            default='8001')
-        parser.add_argument('--restuser', help='REST API username',
-                            default='restadmin')
-        parser.add_argument('--restpass', help='REST API password',
-                            default='restpass')
+        host, port, username, password = utils.get_credentials_from_config()
+        parser.add_argument('--host', help='REST API host address')
+        parser.add_argument('--port', help='REST API host port')
+        parser.add_argument('--restuser', help='REST API username')
+        parser.add_argument('--restpass', help='REST API password')
 
     def run(self):
+        host = self.arguments['host']
+        port = self.arguments['port']
+        username = self.arguments['restuser']
+        password = self.arguments['restpass']
+        client = utils.connect(host=host, port=port,
+                               username=username, password=password)
+        if 'scope' not in self.arguments:
+            self.run_misc_actions(client)
+            return
         scopes = {}
         scopes['user'] = Users
         scopes['list'] = Lists
         scopes['domain'] = Domains
         scopes['preference'] = Preferences
         self.arguments['action'] = self.arguments['action'].replace('-', '_')
-        host = self.arguments['host']
-        port = self.arguments['port']
-        username = self.arguments['restuser']
-        password = self.arguments['restpass']
-        client = Client('%s:%s/3.0' % (host, port),
-                        username,
-                        password)
         try:
-            try:
-                scope_object = scopes[self.arguments['scope']](client)
-            except MailmanConnectionError:
-                raise Exception('Connection to REST API failed')
+            scope_object = scopes[self.arguments['scope']](client)
             action_name = self.arguments['action']
             action = getattr(scope_object, action_name)
             action(self.arguments)
         except Exception as e:
-            colorize = Colorizer()
-            colorize.error(e)
+            utils.error(e)
             exit(1)
+
+    def run_misc_actions(self, client):
+        action_name = self.arguments['action']
+        misc = Misc(client)
+        action = getattr(misc, action_name)
+        action(self.arguments)

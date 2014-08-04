@@ -42,12 +42,15 @@ class Parser:
         self.debugfile = modname + ".dbg"
         self.tabmodule = modname + "_" + "parsetab"
 
+        if not os.path.exists('/tmp/parser_files'):
+            os.mkdir('/tmp/parser_files')
+
         lex.lex(module=self, debug=self.debug)
         yacc.yacc(module=self,
                   debug=self.debug,
                   debugfile=self.debugfile,
                   tabmodule=self.tabmodule,
-                  outputdir='client/parser_files')
+                  outputdir='/tmp/parser_files')
 
     def stem(self, token):
         if token.value[-1] == 's':

@@ -19,13 +19,8 @@
 import os
 import sys
 import unittest
-try:
-    from core.users import Users, UserException
-except:
-    sys.path = [os.path.abspath(os.path.dirname(__file__)) +
-                '/../../cli/'] + sys.path
-    from core.users import Users, UserException
-from lib.mailman_utils import MailmanUtils
+from mailmanclient.cli.core.users import Users, UserException
+from mailmanclient.cli.lib.mailman_utils import MailmanUtils
 
 
 class TestCreateUser(unittest.TestCase):

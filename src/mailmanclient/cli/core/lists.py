@@ -16,8 +16,8 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from lib.utils import Utils
-from core.domains import DomainException
+from mailmanclient.cli.lib.utils import Utils
+from mailmanclient.cli.core.domains import DomainException
 
 
 utils = Utils()
@@ -164,7 +164,8 @@ class Lists():
             table.append([moderator, ''])
         utils.set_table_section_heading(table, 'Members')
         for member in _list.members:
-            table.append([member.email, ''])
+            email = member.address.split('/')[-1]
+            table.append([email, ''])
         print tabulate(table, tablefmt='plain')
 
     def add_moderator(self, args):

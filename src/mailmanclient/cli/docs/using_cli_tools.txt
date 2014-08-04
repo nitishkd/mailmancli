@@ -1,18 +1,18 @@
 Initialization
 ==============
 
-The CLI can be started by running ./mmclient [options|arguments]
+The CLI can be started by running mmclient [options|arguments]
 
 If the mmclient is run without any arguments, the shell
 is started, else the specified action is performed. Use EOF
 to exit the shell.
 
-    $./mmclient 
+    $mmclient 
     Mailman Command Line Interface v1.0
     >>>
     Bye!
 
-    $./mmclient [options]
+    $mmclient [options]
 
 If you have non-default login credentials, specify them with the
 following options
@@ -30,37 +30,37 @@ with the CLI.
 
 To create a new domain,
 
-    $./mmclient create domain testdomain.org
+    $mmclient create domain testdomain.org
 
 To list the domains in the system,
     
-    $./mmclient show domain
+    $mmclient show domain
     http://domain.org
 
 To obtain a detailed listing, use the `-v`/`--verbose` switch.
 The detailed listing of domains displays the domains as a table.
 
-    $./mmclient show domain -v
+    $mmclient show domain -v
     Base URL           Contact address        Mail host    URL host
     http://domain.org  postmaster@domain.org  domain.org   domain.org
 
 In addition, the long listing has a `no-header` switch that can be used 
 to remove the header, making it more comfortable to pipe the output.
 
-    $./mmclient show domain -v --no-header
+    $mmclient show domain -v --no-header
     http://domain.org  postmaster@domain.org  domain.org   domain.org
 
 To delete a domain
 
-    $./mmclient delete domain domain.org
+    $mmclient delete domain domain.org
 
 To supress the confirmation message, do
     
-    $./mmclient delete domain domain.org --yes
+    $mmclient delete domain domain.org --yes
 
 To obtain a detailed description of a domain at one glance
 
-    $./mmclient show domain domain.org
+    $mmclient show domain domain.org
 
 Mailing List
 ============
@@ -70,52 +70,52 @@ performed with the CLI.
 
 To create a mailing list,
 
-    $./mmclient create list list@domain.org
+    $mmclient create list list@domain.org
 
 To display all mailing lists in the system
 
-    $./mmclient show list
+    $mmclient show list
     foo.domain.org
     bar.example.org
 
 To display the lists under the domain `domain.org`
 
-    $./mmclient show list -d domain.org
+    $mmclient show list -d domain.org
     foo.domain.org
 
 Further, a switch -v/--verbose can also be used to print a detailed listing.
 
-    $./mmclient show list --verbose
+    $mmclient show list --verbose
     ID               Name    Mail host    Display Name    FQDN
     list.domain.org  list    domain.org   List            list@domain.org
 
 Again, the `show list` supports a `--no-header` switch that removes
 the header line of the long listing.
 
-    $./mmclient show list --verbose --no-header
+    $mmclient show list --verbose --no-header
     list.domain.org  list    domain.org   List            list@domain.org
 
 To delete a list
 
-    $./mmclient delete list list@domain.org
+    $mmclient delete list list@domain.org
 
 To supress the confirmation message, do
     
-    $./mmclient delete list list@domain.org --yes
+    $mmclient delete list list@domain.org --yes
 
 To obtain a detailed description of a list at one glance
 
-    $./mmclient show list list@domain.org
+    $mmclient show list list@domain.org
 
 Adding and removing moderators can be performed using the CLI as follows
 
 To get a list of members of a mailing list
 
-    $./mmclient show-members list list@domain.org
+    $mmclient show-members list list@domain.org
 
 The above command is equivalent to 
     
-    $./mmclient show user --list list@domain.com
+    $mmclient show user --list list@domain.com
 
 The command also supports flags like 
     
@@ -126,19 +126,19 @@ Refer the `show user` command for more details
 
 To add moderators or owners
 
-    ./mmclient add-moderator list list@domain.org --user a@b.com b@c.com
-    ./mmclient add-owner list list@domain.org --user a@b.com b@c.com
+    mmclient add-moderator list list@domain.org --user a@b.com b@c.com
+    mmclient add-owner list list@domain.org --user a@b.com b@c.com
 
 And to remove moderators or owners
 
-    ./mmclient remove-moderator list list@domain.org --user a@b.com b@c.com
-    ./mmclient remove-owner list list@domain.org --user a@b.com b@c.com
+    mmclient remove-moderator list list@domain.org --user a@b.com b@c.com
+    mmclient remove-owner list list@domain.org --user a@b.com b@c.com
 
 The add and remove commands support the action on a list of users 
 at once. Success or failure messages are provided upon completion or
 failure of an action. The messages can be supressed by using a quiet flag.
 
-    ./mmclient remove-moderator list list@domain.org --user a@b.com b@c.com --quiet
+    mmclient remove-moderator list list@domain.org --user a@b.com b@c.com --quiet
 
 If the action fails for a user, the user is ignored and the action continues
 without stalling.
@@ -148,45 +148,45 @@ User
 
 To create a new user
 
-    $./mmclient create user foo@bar.com --name "Foo" --password "password"
+    $mmclient create user foo@bar.com --name "Foo" --password "password"
 
 The `show user` command lists a single email ID of each user.
 
-    $./mmclient show user 
+    $mmclient show user 
     foo@bar.com
 
 To list users who are members of a list
 
-    $./mmclient show user --list list@domain.org
+    $mmclient show user --list list@domain.org
     foo@bar.com
 
 The show command also supports a `--verbose` switch 
 
-    $./mmclient show user --verbose
+    $mmclient show user --verbose
     Display Name    Address       Created on                                                  User ID
     Foo             foo2@bar.com  2014-05-30T00:52:52.564634  220337223817757552725201672981303248133
 
 and a `--no-header` switch
 
-    $./mmclient show user --verbose --no-header
+    $mmclient show user --verbose --no-header
     Foo             foo2@bar.com  2014-05-30T00:52:52.564634  220337223817757552725201672981303248133
 
 To delete a user
 
-    $./mmclient delete user foo@bar.com
+    $mmclient delete user foo@bar.com
 
 To supress the confirmation message, do
     
-    $./mmclient delete user foo@bar.com --yes
+    $mmclient delete user foo@bar.com --yes
 
 To obtain a detailed description of a user at one glance
 
-    $./mmclient show user foo@bar.com
+    $mmclient show user foo@bar.com
 
 Users can be subscribed to a mailing list by using the subscribe 
 command
 
-    $./mmclient subscribe user user1@bar.com user2@bar.com --list list@domain.org
+    $mmclient subscribe user user1@bar.com user2@bar.com --list list@domain.org
     user1@bar.com subscribed to list@domain.org
     Failed to subscribe user2@bar.com : HTTP Error 409: Member already subscribed
 
@@ -195,15 +195,15 @@ Multiple users can be subscribed to the list at the same time.
 Similarly, Users can be unsubscribed to a mailing list by using the unsubscribe 
 command
 
-    $./mmclient unsubscribe user user1@bar.com user2@bar.com --list list@domain.org
+    $mmclient unsubscribe user user1@bar.com user2@bar.com --list list@domain.org
     user1@bar.com unsubscribed from list@domain.org
     user2@bar.com unsubscribed from list@domain.org
 
 The feedback for the subscribe and unsubscribe actions can be supressed by
 using the --quiet flag.
 
-    $./mmclient subscribe user user1@bar.com user2@bar.com --list list@domain.org --quiet
-    $./mmclient unsubscribe user user1@bar.com user2@bar.com --list list@domain.org --quiet
+    $mmclient subscribe user user1@bar.com user2@bar.com --list list@domain.org --quiet
+    $mmclient unsubscribe user user1@bar.com user2@bar.com --list list@domain.org --quiet
 
 The subscribe and unsubscribe actions continue even if one the users 
 fail to subscribe/unsubscribe to a list. A relevant feedback message is
@@ -217,26 +217,47 @@ by using the commands of preference scope.
 
 To update the value of a preference of an user
 
-    ./mmclient update preference user --email foo@bar.com [key] [value]
+    mmclient update preference user --email foo@bar.com [key] [value]
 
 To update the value of a preference of a member
 
-    ./mmclient update preference member --email foo@bar.com --list list@domain.org [key] [value]
+    mmclient update preference member --email foo@bar.com --list list@domain.org [key] [value]
 
 To update the value of a preference of an address
 
-    ./mmclient update preference address --email foo@bar.com [key] [value]
+    mmclient update preference address --email foo@bar.com [key] [value]
 
 To update the value of a preference globally
 
-    ./mmclient update preference global [key] [value]
+    mmclient update preference global [key] [value]
 
 To view the current value of a preference, use the `mmclient show preference` command
 in the same way above, obviously, without the `value` argument
 
 For eg, to view a setting of a member
 
-    ./mmclient show preference member --email foo@bar.com --list list@domain.org [key]
+    mmclient show preference member --email foo@bar.com --list list@domain.org [key]
 
 Both the commands try to suggest the possible preference keys upon errors while typing the
 keys. The commands return `1` upon an invalid key.
+
+Backup and Restore
+==================
+
+The CLI tools can be used to create backups and restore the backups of the 
+Mailman data. The backup currently supports the backup for SQLite mode.
+
+The backup tools backs up the $var_dir specified by the Mailman configuration
+as a zip archive to a specified location.
+
+    $mmclient backup ~/backup.zip
+
+To restore the backup, specfiy the path to the backup file.
+
+    $mmclient restore ~/backup.zip
+
+Please remember to stop the mailman runner before performing
+the backup and restore operations. 
+
+The paths for backup and restore are read from the Mailman configuration
+file.

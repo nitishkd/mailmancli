@@ -15,12 +15,12 @@
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
 from cmd import Cmd
-from core.lists import Lists
-from core.domains import Domains
-from core.users import Users
-from core.preferences import Preferences
-from lib.mailman_utils import MailmanUtils
-from lib.utils import Filter
+from mailmanclient.cli.core.lists import Lists
+from mailmanclient.cli.core.domains import Domains
+from mailmanclient.cli.core.users import Users
+from mailmanclient.cli.core.preferences import Preferences
+from mailmanclient.cli.lib.mailman_utils import MailmanUtils
+from mailmanclient.cli.lib.utils import Filter
 
 utils = MailmanUtils()
 
@@ -97,7 +97,7 @@ class Shell(Cmd):
  Usage:
   set `<variable>` = `<value>`
         """
-        from client.parsers._set import Set
+        from mailmanclient.cli.client.parsers._set import Set
         parser = Set()
         arguments = parser.parse(self)
         key = arguments['key']
@@ -109,7 +109,7 @@ class Shell(Cmd):
         """Delete a shell environment variable
  Usage:
   unset `<var_name>`"""
-        from client.parsers.unset import Unset
+        from mailmanclient.cli.client.parsers.unset import Unset
         parser = Unset()
         arguments = parser.parse(self)
         key = arguments['key']
@@ -123,7 +123,7 @@ class Shell(Cmd):
         """Show a shell environment variable
  Usage:
   show_var `<var_name>`"""
-        from client.parsers.show_var import ShowVar
+        from mailmanclient.cli.client.parsers.show_var import ShowVar
         parser = ShowVar()
         arguments = parser.parse(self)
         key = arguments['key']
@@ -136,7 +136,7 @@ class Shell(Cmd):
         """Disable the shell environment
  Usage:
   disable env"""
-        from client.parsers.disable import Disable
+        from mailmanclient.cli.client.parsers.disable import Disable
         parser = Disable()
         parser.parse(self)
         self.env_on = False
@@ -146,7 +146,7 @@ class Shell(Cmd):
         """Enable the shell environment
  Usage:
   enable env"""
-        from client.parsers.enable import Enable
+        from mailmanclient.cli.client.parsers.enable import Enable
         parser = Enable()
         parser.parse(self)
         self.env_on = True
@@ -157,9 +157,9 @@ class Shell(Cmd):
  Usage:
   show {domain|user|list} where `<object_attribute>` = `<value>`
   show {domain|user|list} where `<object_attribute>` like `<regex>`
-  show {domain|user|list} where `<key>` in `<list_attribute>`
+  show {domain|user|list} where `<regex>` in `<list_attribute>`
   show {domain|user|list} where <filter2> and <filter2> ..."""
-        from client.parsers.show import Show
+        from mailmanclient.cli.client.parsers.show import Show
         parser = Show()
         arguments = parser.parse(self)
         scope = arguments['scope']
@@ -176,15 +176,18 @@ class Shell(Cmd):
         cmd_arguments = {}
         if scope == 'list':
             cmd_arguments['list'] = None
+            cmd_arguments['csv'] = None
             cmd_arguments['domain'] = None
             cmd_arguments['verbose'] = True
             cmd_arguments['no_header'] = False
         elif scope == 'domain':
             cmd_arguments['domain'] = None
+            cmd_arguments['csv'] = None
             cmd_arguments['verbose'] = True
             cmd_arguments['no_header'] = False
         elif scope == 'user':
             cmd_arguments['user'] = None
+            cmd_arguments['csv'] = None
             cmd_arguments['list_name'] = None
             cmd_arguments['verbose'] = True
             cmd_arguments['no_header'] = False
@@ -193,10 +196,10 @@ class Shell(Cmd):
     def do_create(self, args):
         """Creates mailman Objects
  Usage:
-  create user with `email` = `<email>` and `password` = `<passwd>` and `name` = `<name>`
-  create domain with `domain` = `<domain>` and `contact` = `<contact email>`
-  create list with `fqdn_listname` = `<list@domain>`"""
-        from client.parsers.create import Create
+  create user with `email`=`EMAIL` and `password`=`PASSWD` and `name`=`NAME`
+  create domain with `name`=`DOMAIN` and `contact`=`CONTACT`
+  create list with `fqdn_listname`=`LIST`"""
+        from mailmanclient.cli.client.parsers.create import Create
         parser = Create()
         arguments = parser.parse(self)
         scope = arguments['scope']
@@ -209,9 +212,9 @@ class Shell(Cmd):
                 req_args = ['fqdn_listname']
                 cmd_arguments['list'] = utils.add_shell_vars(properties['fqdn_listname'], self)
             elif scope == 'domain':
-                req_args = ['domain', 'contact']
-                cmd_arguments['domain'] = utils.add_shell_vars(properties['domain'], self)
-                cmd_arguments['contact'] = utils.add_shell_vars(properties['contact'])
+                req_args = ['name', 'contact']
+                cmd_arguments['domain'] = utils.add_shell_vars(properties['name'], self)
+                cmd_arguments['contact'] = utils.add_shell_vars(properties['contact'], self)
             elif scope == 'user':
                 req_args = ['email', 'password', 'name']
                 cmd_arguments['email'] = utils.add_shell_vars(properties['email'], self)
@@ -233,7 +236,7 @@ class Shell(Cmd):
   delete {domain|user|list} where `<object_attribute>` like `<regex>`
   delete {domain|user|list} where `<key>` in `<list_attribute>`
   delete {domain|user|list} where <filter1> and <filter2> ..."""
-        from client.parsers.delete import Delete
+        from mailmanclient.cli.client.parsers.delete import Delete
         parser = Delete()
         arguments = parser.parse(self)
         scope = arguments['scope']
@@ -265,7 +268,7 @@ class Shell(Cmd):
         """Subscribes users to a list
  Usage:
   subscribe users `<email1>` `<email2>` ... to `<list fqdn_name>`"""
-        from client.parsers.subscribe import Subscribe
+        from mailmanclient.cli.client.parsers.subscribe import Subscribe
         parser = Subscribe()
         arguments = parser.parse(self)
         users = arguments['users']
@@ -280,13 +283,14 @@ class Shell(Cmd):
         cmd_arguments['list_name'] = list_name
         cmd_arguments['quiet'] = False
         user_object.subscribe(cmd_arguments)
+        self.refresh_lists()
 
     def do_unsubscribe(self, args):
         """ Unsubscribes users from a list
  Usage:
   unsubscribe users `<email1>` [`<email2>` ...] from `<list fqdn_name>`
         """
-        from client.parsers.unsubscribe import Unsubscribe
+        from mailmanclient.cli.client.parsers.unsubscribe import Unsubscribe
         parser = Unsubscribe()
         arguments = parser.parse(self)
         users = arguments['users']
@@ -301,6 +305,7 @@ class Shell(Cmd):
         cmd_arguments['list_name'] = list_name
         cmd_arguments['quiet'] = False
         user_object.unsubscribe(cmd_arguments)
+        self.refresh_lists()
 
     def do_update(self, args):
         """Command to set preferences
@@ -316,7 +321,7 @@ class Shell(Cmd):
 
    update preference `<preference_name>` to `<value>`
     for address with `email` = `foo@bar.com`"""
-        from client.parsers.update import Update
+        from mailmanclient.cli.client.parsers.update import Update
         parser = Update()
         arguments = parser.parse(self)
         scope = arguments['scope']

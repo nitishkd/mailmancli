@@ -17,20 +17,26 @@
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+from lib.utils import Utils
 from client.shell import Shell
-from lib.utils import CmdPreprocessor
 from client.cmdparser import CmdParser
 
-try:
-    sys.argv[1]
-    arguments = None
+def main():
     try:
-        arguments = CmdPreprocessor(sys.argv)
-    except:
-        pass
-    c = CmdParser(arguments)
-    c.run()
-except IndexError:
-    s = Shell()
-    s.initialize()
-    s.cmdloop()
+        sys.argv[1]
+        utils = Utils()
+        arguments = None
+        try:
+            arguments = utils.stem(sys.argv)
+        except IndexError:
+            pass
+        c = CmdParser(arguments)
+        c.run()
+    except IndexError:
+        s = Shell()
+        s.initialize()
+        s.cmdloop()
+
+
+if __name__ == '__main__':
+    main()

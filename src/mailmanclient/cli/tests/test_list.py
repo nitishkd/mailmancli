@@ -22,14 +22,9 @@ import unittest
 from mock import patch
 from urllib2 import HTTPError
 from StringIO import StringIO
-try:
-    from core.lists import Lists, ListException
-    from core.domains import DomainException
-except:
-    sys.path = [os.path.abspath(os.path.dirname(__file__)) +
-                '/../../cli/'] + sys.path
-    from core.domains import DomainException
-from lib.mailman_utils import MailmanUtils
+from mailmanclient.cli.core.lists import Lists, ListException
+from mailmanclient.cli.core.domains import DomainException
+from mailmanclient.cli.lib.mailman_utils import MailmanUtils
 
 
 class TestCreateList(unittest.TestCase):
@@ -109,6 +104,7 @@ class TestShowList(unittest.TestCase):
         nlists = len(self.client.lists)
         args = {}
         args['no_header'] = False
+        args['csv'] = None
         args['verbose'] = False
         args['domain'] = None
         args['list'] = None
@@ -122,6 +118,7 @@ class TestShowList(unittest.TestCase):
         nlists = len(self.domain.lists)
         args = {}
         args['no_header'] = False
+        args['csv'] = None
         args['verbose'] = False
         args['domain'] = self.test_domain
         args['list'] = None
@@ -134,6 +131,7 @@ class TestShowList(unittest.TestCase):
     def test_verbose_show(self, output):
         args = {}
         args['no_header'] = False
+        args['csv'] = None
         args['verbose'] = True
         args['domain'] = None
         args['list'] = None
@@ -160,6 +158,7 @@ class TestShowList(unittest.TestCase):
     def test_filter_verbose_show(self, output):
         args = {}
         args['no_header'] = False
+        args['csv'] = None
         args['verbose'] = True
         args['domain'] = self.test_domain
         args['list'] = None
@@ -186,6 +185,7 @@ class TestShowList(unittest.TestCase):
     def test_no_header(self, output):
         args = {}
         args['no_header'] = False
+        args['csv'] = None
         args['verbose'] = True
         args['domain'] = None
         args['list'] = None

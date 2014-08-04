@@ -23,13 +23,8 @@ import unittest
 from mock import patch
 from urllib2 import HTTPError
 from StringIO import StringIO
-try:
-    from core.domains import Domains, DomainException
-except:
-    sys.path = [os.path.abspath(os.path.dirname(__file__)) +
-                '/../../cli/'] + sys.path
-    from core.domains import Domains, DomainException
-from lib.mailman_utils import MailmanUtils
+from mailmanclient.cli.core.domains import Domains, DomainException
+from mailmanclient.cli.lib.mailman_utils import MailmanUtils
 
 
 class TestCreateDomain(unittest.TestCase):
@@ -89,6 +84,7 @@ class TestShowDomain(unittest.TestCase):
         args = {}
         args['no_header'] = False
         args['verbose'] = False
+        args['csv'] = None
         args['domain'] = None
         self.domain.show(args)
         domain_list = output.getvalue().split('\n')
@@ -100,6 +96,7 @@ class TestShowDomain(unittest.TestCase):
         args = {}
         args['no_header'] = False
         args['verbose'] = True
+        args['csv'] = None
         args['domain'] = None
         test_domain = random.randint(0, len(self.client.domains) - 1)
         test_domain = self.client.domains[test_domain]
@@ -123,6 +120,7 @@ class TestShowDomain(unittest.TestCase):
     def test_no_header(self, output):
         args = {}
         args['no_header'] = True
+        args['csv'] = None
         args['verbose'] = True
         args['domain'] = None
         test_domain = random.randint(0, len(self.client.domains) - 1)

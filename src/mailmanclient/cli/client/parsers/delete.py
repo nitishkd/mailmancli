@@ -15,8 +15,8 @@
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from client.parsers.base import Parser
-from lib.mailman_utils import MailmanUtils
+from mailmanclient.cli.client.parsers.base import Parser
+from mailmanclient.cli.lib.mailman_utils import MailmanUtils
 sys.path.insert(0, "../..")
 
 import ply.yacc as yacc

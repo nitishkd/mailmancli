@@ -16,7 +16,7 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from lib.utils import Utils
+from mailmanclient.cli.lib.utils import Utils
 
 
 utils = Utils()

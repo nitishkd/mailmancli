@@ -16,10 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-from ConfigParser import ConfigParser
 from mailmanclient import Client
-from lib.utils import Utils
+from mailman.config import config
+from mailmanclient.cli.lib.utils import Utils
 
 
 class MailmanUtils(Utils):
@@ -28,20 +27,40 @@ class MailmanUtils(Utils):
         Client or the REST API
     """
 
-    def connect(self):
-        """ Connect to Mailman REST API and
+    def __init__(self):
+        config.load()
+
+    def connect(self, *args, **kwargs):
+        """ Connect to Mailman REST API using the arguments specified.
+            Missing arguments are decided from the mailman.cfg file
             return a client object.
         """
-        cfgparser = ConfigParser()
-        cfgparser.read(os.path.dirname(__file__) + '/../config.ini')
-        host = cfgparser.get('LOGIN', 'host')
-        port = cfgparser.get('LOGIN', 'port')
-        username = cfgparser.get('LOGIN', 'username')
-        password = cfgparser.get('LOGIN', 'password')
+        host, port, username, password = self.get_credentials_from_config()
+
+        if 'host' in kwargs and kwargs['host']:
+            host = kwargs['host']
+        if 'port' in kwargs and kwargs['port']:
+            port = kwargs['port']
+        if 'username' in kwargs and kwargs['username']:
+            username = kwargs['username']
+        if 'password' in kwargs and kwargs['password']:
+            password = kwargs['password']
+
         client = Client('%s:%s/3.0' % (host, port),
                         username,
                         password)
         return client
+
+    def get_credentials_from_config(self):
+        """ Returns the credentials required for logging on to
+            the Mailman REST API, that are read from the Mailman
+            configuration.
+        """
+        host = 'http://' + config.schema['webservice']['hostname']
+        port = config.schema['webservice']['port']
+        username = config.schema['webservice']['admin_user']
+        password = config.schema['webservice']['admin_pass']
+        return host, port, username, password
 
     def get_new_domain_name(self):
         """ Generates the name of a non existent domain """
@@ -55,6 +74,10 @@ class MailmanUtils(Utils):
                 return domain_name
 
     def add_shell_vars(self, arg, shell):
+        """ Replaces the variables used in the command with thier respective
+            values if the values are present in the shell environment, else
+            use the variable as such.
+        """
         if not shell.env_on or not arg:
             return arg
         if arg[0] == '$' and arg[1:] in shell.env:
@@ -62,6 +85,10 @@ class MailmanUtils(Utils):
         return arg
 
     def add_reserved_vars(self, args, shell):
+        """ Adds the reserved variables to a filter query. The reserved variables
+            are domain, list and user, which are added to respective scopes and
+            atrribute names.
+        """
         scope = args['scope']
         if 'filters' not in args:
             args['filters'] = []

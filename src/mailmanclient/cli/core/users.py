@@ -16,8 +16,8 @@
 
 from tabulate import tabulate
 from urllib2 import HTTPError
-from lib.utils import Utils
-from core.lists import ListException
+from mailmanclient.cli.lib.utils import Utils
+from mailmanclient.cli.core.lists import ListException
 
 utils = Utils()
 
@@ -162,7 +162,8 @@ class Users():
             table.append([_list, ''])
         utils.set_table_section_heading(table, 'Subscriptions')
         for subscription in user.subscriptions:
-            table.append([subscription.email+' at '+str(subscription.list_id),
+            email = subscription.address.split('/')[-1]
+            table.append([email+' at '+str(subscription.list_id),
                          str(subscription.role)])
         print tabulate(table, tablefmt='plain')
 

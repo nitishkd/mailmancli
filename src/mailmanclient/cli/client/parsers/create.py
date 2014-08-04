@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
 
-from client.parsers.base import Parser
+from mailmanclient.cli.client.parsers.base import Parser
 import sys
 sys.path.insert(0, "../..")
 
