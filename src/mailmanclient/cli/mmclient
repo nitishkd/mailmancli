@@ -15,28 +15,29 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#  
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 import sys
-from lib.utils import Utils
-from client.shell import Shell
-from client.cmdparser import CmdParser
-
-def main():
+from mailmanclient.cli.lib.utils import Utils
+from mailmanclient.cli.client.shell import Shell
+from mailmanclient.cli.client.cmdparser import CmdParser
+try:
+    sys.argv[1]
+    utils = Utils()
+    arguments = None
     try:
-        sys.argv[1]
-        utils = Utils()
-        arguments = None
-        try:
-            arguments = utils.stem(sys.argv)
-        except IndexError:
-            pass
-        c = CmdParser(arguments)
-        c.run()
+        arguments = utils.stem(sys.argv)
     except IndexError:
-        s = Shell()
-        s.initialize()
-        s.cmdloop()
-
-
-if __name__ == '__main__':
-    main()
+        pass
+    c = CmdParser(arguments)
+    c.run()
+except IndexError:
+    s = Shell()
+    s.initialize()
+    s.cmdloop()

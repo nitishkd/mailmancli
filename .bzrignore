@@ -1,5 +1,3 @@
 build
 dist
 mailman.client.egg-info
-src/mailmanclient/cli/var
-*parsetab*

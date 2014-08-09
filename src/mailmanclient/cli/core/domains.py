@@ -13,6 +13,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 from tabulate import tabulate
 from urllib2 import HTTPError
@@ -33,10 +40,6 @@ class Domains():
     def __init__(self, client):
         self.client = client
 
-        # Tests if connection OK else raise exception
-        domains = self.client.domains
-        del domains
-
     def create(self, args):
         """Create a domain name with specified domain_name.
            Optionally, the contact address can also be specified.
@@ -56,41 +59,6 @@ class Domains():
         except HTTPError:
             raise DomainException('Domain already exists')
 
-    def get_listing(self, detailed, hide_header, domains_ext):
-        """Returns list of domains, formatted for tabulation.
-
-           :param detailed: Return domain details or not
-           :type detailed: boolean
-           :param hide_header: Hide header
-           :type hide_header: boolean
-           :param domains_ext: External domains to list
-           :type domains_ext: array
-           :rtype: Returns a table as a nested list
-        """
-        domains = self.client.domains
-        table = []
-        if detailed:
-            if hide_header:
-                headers = []
-            else:
-                headers = ['Base URL', 'Contact address',
-                           'Mail host', 'URL host']
-            table.append(headers)
-            if domains_ext is not None:
-                domains = domains_ext
-            for i in domains:
-                row = []
-                row.append(i.base_url)
-                row.append(i.contact_address)
-                row.append(i.mail_host)
-                row.append(i.url_host)
-                table.append(row)
-        else:
-            table.append([])
-            for i in domains:
-                table.append([i.base_url])
-        return table
-
     def show(self, args, domains_ext=None):
         """List the domains in the system.
 
@@ -100,14 +68,25 @@ class Domains():
         if args['domain'] is not None:
             self.describe(args)
             return
-        longlist = args['verbose']
-        hide_header = args['no_header']
-        table = self.get_listing(longlist, hide_header, domains_ext)
-        headers = table[0]
-        try:
-            table = table[1:]
-        except IndexError:
-            table = []
+
+        headers = []
+        fields = ['base_url']
+        domains = []
+
+        if domains_ext:
+            domains = domains_ext
+        else:
+            domains = self.client.domains
+
+        if not args['no_header'] and args['verbose']:
+            headers = ['Base URL', 'Contact address',
+                       'Mail host', 'URL host']
+
+        if args['verbose']:
+            fields = ['base_url', 'contact_address', 'mail_host', 'url_host']
+
+        table = utils.get_listing(domains, fields)
+
         if args['csv']:
             utils.write_csv(table, headers, args['csv'])
         else:

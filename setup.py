@@ -26,7 +26,7 @@ from string import Template
 require_python(0x20600f0)
 __version__ = get_version('src/mailmanclient/__init__.py')
 
-template = Template('$script = mailmanclient.cli.$script:main')
+template = Template('$script = mailmanclient.cli.$script')
 scripts = set(
     template.substitute(script=script)
     for script in ['mmclient']
@@ -39,9 +39,7 @@ setup(
     packages=find_packages('src'),
     package_dir = {'': 'src'},
     include_package_data=True,
-    entry_points    = {
-        'console_scripts' : list(scripts),
-        },
+    scripts=['src/mailmanclient/cli/mmclient'],
     maintainer='Barry Warsaw',
     maintainer_email='barry@list.org',
     description=description('README.txt'),

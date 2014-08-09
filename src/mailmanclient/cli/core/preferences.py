@@ -13,6 +13,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 from mailmanclient.cli.lib.utils import Utils
 
@@ -29,10 +36,6 @@ class Preferences():
 
     def __init__(self, client):
         self.client = client
-
-        # Tests if connection OK else raise exception
-        preferences = self.client.preferences
-        del preferences
 
     def get_scope_object(self, scope, args):
         scope_object = None

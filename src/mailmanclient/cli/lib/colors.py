@@ -21,43 +21,12 @@
 #               Abhilash Raj <raj.abhilash1@gmail.com>
 #               Barry Warsaw <barry@list.org>
 
-import ply.yacc as yacc
-from mailmanclient.cli.client.parsers.base import Parser
-
-
-class Unset(Parser):
-    tokens = ('UNSET', 'STRING')
-    literals = ['=', '`']
-    t_ignore = " \t"
-
-    def t_UNSET(self, t):
-        r'unset'
-        return t
-
-    def t_STRING(self, t):
-        r'`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
-        t.value = t.value.replace('`', '')
-        return t
-
-    def t_newline(self, t):
-        r'\n+'
-        t.lexer.lineno += t.value.count("\n")
-        return
-
-    def t_error(self, t):
-        raise Exception("Illegal character '%s'" % t.value[0])
-        t.lexer.skip(1)
-
-    def p_statement_scope(self, p):
-        '''S : UNSET STRING'''
-        self.arguments['key'] = p[2]
-
-    def p_error(self, p):
-        if p:
-            raise Exception("Syntax error at '%s'" % p.value)
-        else:
-            raise Exception("Syntax error : Incomplete Command")
-
-    def parse(self, shell):
-        yacc.parse(shell.line)
-        return self.arguments
+GREY = "\033[90m%s\033[0m"
+RED = "\033[91m%s\033[0m"
+GREEN = "\033[92m%s\033[0m"
+YELLOW = "\033[93m%s\033[0m"
+BLUE = "\033[94m%s\033[0m"
+PURPLE = "\033[95m%s\033[0m"
+CYAN = "\033[96m%s\033[0m"
+WHITE = "\033[97m%s\033[0m"
+BLACK = "\033[98m%s\033[0m"

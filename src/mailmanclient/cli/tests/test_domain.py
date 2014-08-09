@@ -15,9 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
-import os
-import sys
 import random
 import unittest
 from mock import patch

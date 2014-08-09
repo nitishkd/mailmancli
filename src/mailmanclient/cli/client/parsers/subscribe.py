@@ -13,12 +13,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
-
-from mailmanclient.cli.client.parsers.base import Parser
-import sys
-sys.path.insert(0, "../..")
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 import ply.yacc as yacc
+from mailmanclient.cli.client.parsers.base import Parser
 
 
 class Subscribe(Parser):

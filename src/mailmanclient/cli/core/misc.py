@@ -13,12 +13,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 import os
 import zipfile
 from mailman.config import config
 from mailmanclient.cli.lib.utils import Utils
-from mailmanclient import MailmanConnectionError
 
 
 utils = Utils()
@@ -31,16 +37,8 @@ class MiscException(Exception):
 
 class Misc():
     """ Miscellaneous actions """
-    def __init__(self, client):
-        self. client = client
 
     def backup(self, args):
-        try:
-            self.client.lists
-            utils.error('Please stop mailman runner before backup')
-            return
-        except MailmanConnectionError:
-            utils.warn('Performing backup action')
         config.load()
         vardir = config.paths['VAR_DIR']
         output = args['output']
@@ -58,12 +56,6 @@ class Misc():
                         z.write(filename, arcname)
 
     def restore(self, args):
-        try:
-            self.client.lists
-            utils.error('Please stop mailman runner before restore')
-            return
-        except MailmanConnectionError:
-            utils.warn('Performing restore action')
         config.load()
         vardir = config.paths['VAR_DIR']
         backup = args['backup']

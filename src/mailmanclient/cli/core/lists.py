@@ -13,6 +13,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 from tabulate import tabulate
 from urllib2 import HTTPError
@@ -34,10 +41,6 @@ class Lists():
 
     def __init__(self, client):
         self. client = client
-
-        # Tests if connection OK else raise exception
-        lists = self.client.lists
-        del lists
 
     def create(self, args):
         """Create a mailing list with specified list_name
@@ -63,64 +66,6 @@ class Lists():
         except HTTPError:
             raise ListException('List already exists')
 
-    def get_listing(self, domain, detailed, hide_header, lists_ext):
-        """Returns list of mailing lists, formatted for tabulation.
-
-            :param domain: Domain name
-            :type domain: string
-            :param detailed: Return list details or not
-            :type detailed: boolean
-            :param hide_header: Remove header
-            :type hide_header: boolean
-            :param lists_ext: External array of lists
-            :type hide_header: array
-        """
-        lists = self.client.lists
-        table = []
-        if detailed:
-            if hide_header:
-                headers = []
-            else:
-                headers = ['ID', 'Name', 'Mail host', 'Display Name', 'FQDN']
-            table.append(headers)
-            if lists_ext is not None:
-                lists = lists_ext
-            if domain is not None:
-                try:
-                    domain = self.client.get_domain(domain)
-                except HTTPError:
-                    raise DomainException('Domain not found')
-                for i in domain.lists:
-                    row = []
-                    row.append(i.list_id)
-                    row.append(i.list_name)
-                    row.append(i.mail_host)
-                    row.append(i.display_name)
-                    row.append(i.fqdn_listname)
-                    table.append(row)
-            else:
-                for i in lists:
-                    row = []
-                    row.append(i.list_id)
-                    row.append(i.list_name)
-                    row.append(i.mail_host)
-                    row.append(i.display_name)
-                    row.append(i.fqdn_listname)
-                    table.append(row)
-        else:
-            table.append([])
-            if domain is not None:
-                try:
-                    d = self.client.get_domain(domain)
-                except HTTPError:
-                    raise DomainException('Domain not found')
-                for i in d.lists:
-                    table.append([i.list_id])
-            else:
-                for i in lists:
-                    table.append([i.list_id])
-        return table
-
     def show(self, args, lists_ext=None):
         """List the mailing lists in the system or under a domain.
 
@@ -130,15 +75,29 @@ class Lists():
         if args['list'] is not None:
             self.describe(args)
             return
-        domain_name = args['domain']
-        longlist = args['verbose']
-        hide_header = args['no_header']
-        table = self.get_listing(domain_name, longlist, hide_header, lists_ext)
-        headers = table[0]
-        try:
-            table = table[1:]
-        except IndexError:
-            table = []
+
+        lists = []
+        fields = ['list_id']
+        headers = []
+
+        if args['domain']:
+            domain = self.client.get_domain(args['domain'])
+            lists = domain.lists
+        elif lists_ext:
+            lists = lists_ext
+        else:
+            lists = self.client.lists
+
+        if args['verbose']:
+            fields = ['list_id', 'list_name',
+                      'mail_host', 'display_name',
+                      'fqdn_listname']
+
+        if not args['no_header'] and args['verbose']:
+            headers = ['ID', 'Name', 'Mail host', 'Display Name', 'FQDN']
+
+        table = utils.get_listing(lists, fields)
+
         if args['csv']:
             utils.write_csv(table, headers, args['csv'])
         else:

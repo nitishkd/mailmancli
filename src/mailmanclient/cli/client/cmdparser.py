@@ -13,6 +13,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 from argparse import ArgumentParser
 from mailmanclient.cli.core.misc import Misc
@@ -337,7 +344,7 @@ class CmdParser():
         client = utils.connect(host=host, port=port,
                                username=username, password=password)
         if 'scope' not in self.arguments:
-            self.run_misc_actions(client)
+            self.run_misc_actions()
             return
         scopes = {}
         scopes['user'] = Users
@@ -354,8 +361,8 @@ class CmdParser():
             utils.error(e)
             exit(1)
 
-    def run_misc_actions(self, client):
+    def run_misc_actions(self):
         action_name = self.arguments['action']
-        misc = Misc(client)
+        misc = Misc()
         action = getattr(misc, action_name)
         action(self.arguments)

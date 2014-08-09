@@ -13,6 +13,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 from cmd import Cmd
 from mailmanclient.cli.core.lists import Lists
@@ -168,8 +175,8 @@ class Shell(Cmd):
             for i in arguments['filters']:
                 key, op, value = i
                 value = utils.add_shell_vars(value, self)
-                data_filter = Filter(key, value, op, filtered_list)
-                filtered_list = data_filter.get_results()
+                data_filter = Filter()
+                filtered_list = data_filter.get_results(key, value, op, filtered_list)
                 if not filtered_list:
                     return False
         scope_object = self.scope_classes[scope](self.mmclient)
@@ -245,8 +252,8 @@ class Shell(Cmd):
             for i in arguments['filters']:
                 key, op, value = i
                 value = utils.add_shell_vars(value, self)
-                data_filter = Filter(key, value, op, filtered_list)
-                filtered_list = data_filter.get_results()
+                data_filter = Filter()
+                filtered_list = data_filter.get_results(key, value, op, filtered_list)
         if 'filters' in arguments and arguments['filters'] == []:
             utils.confirm('Delete all %ss?[y/n]' % scope)
             ans = raw_input()

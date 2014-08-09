@@ -13,6 +13,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with mailman.client.  If not, see <http://www.gnu.org/licenses/>.
+#
+# This file is part of the Mailman CLI Project, Google Summer Of Code, 2014
+#
+# Author    :   Rajeev S <rajeevs1992@gmail.com>
+# Mentors   :   Stephen J. Turnbull <stephen@xemacs.org>
+#               Abhilash Raj <raj.abhilash1@gmail.com>
+#               Barry Warsaw <barry@list.org>
 
 from tabulate import tabulate
 from urllib2 import HTTPError
@@ -34,10 +41,6 @@ class Users():
     def __init__(self, client):
         self.client = client
 
-        # Tests if connection OK else raise exception
-        users = self.client.users
-        del users
-
     def create(self, args):
         """Create a user with specified email,password and display name.
 
@@ -55,72 +58,9 @@ class Users():
         except HTTPError:
             raise UserException('User already exists')
 
-    def get_listing(self, list_name, detailed, hide_header, users_ext):
-        """Returns list of mailing lists, formatted for tabulation.
-
-            :param list_name: Name of the list whose members are to be listed
-            :type list_name: string
-            :param detailed: Return a detailed list or not
-            :type detailed: boolean
-            :param hide_header: Remove header of detailed listing
-            :type hide_header: boolean
-            :rtype: Returns a table in form of nested lists
-        """
-        users = self.client.users
-        table = []
-        if detailed:
-            if hide_header:
-                headers = []
-            else:
-                headers = ['Display Name', 'Address', 'Created on', 'User ID']
-            table.append(headers)
-            if users_ext is not None:
-                users = users_ext
-            if list_name is not None:
-                try:
-                    user = self.client.get_list(list_name)
-                except HTTPError:
-                    raise ListException('List not found')
-                for member in user.members:
-                    row = []
-                    try:
-                        row.append(member.user.display_name)
-                        row.append(str(member.user.addresses[0]))
-                        row.append(member.user.created_on)
-                        row.append(str(member.user.user_id))
-                        table.append(row)
-                    except:
-                        pass
-            else:
-                for user in users:
-                    row = []
-                    try:
-                        row.append(user.display_name)
-                        row.append(str(user.addresses[0]))
-                        row.append(user.created_on)
-                        row.append(str(user.user_id))
-                        table.append(row)
-                    except:
-                        pass
-        else:
-            table.append([])
-            if list_name is not None:
-                try:
-                    user = self.client.get_list(list_name)
-                except HTTPError:
-                    raise ListException('List not found')
-                for member in user.members:
-                    table.append([str(member.user.addresses[0])])
-            else:
-                for user in users:
-                    try:
-                        table.append([str(user.addresses[0])])
-                    except:
-                        pass
-        return table
-
     def show(self, args, users_ext=None):
         """List users in the system.
+
 
            :param args: Commandline arguments
            :type args: dictionary
@@ -128,19 +68,37 @@ class Users():
         if args['user'] is not None:
             self.describe(args)
             return
-        longlist = args['verbose']
-        hide_header = args['no_header']
-        list_name = args['list_name']
-        table = self.get_listing(list_name, longlist, hide_header, users_ext)
-        headers = table[0]
-        try:
-            table = table[1:]
-        except IndexError:
-            table = []
+
+        headers = []
+        fields = ['addresses']
+        users = []
+
+        if args['verbose']:
+            fields = ['display_name', 'addresses', 'created_on', 'user_id']
+
+        if not args['no_header'] and args['verbose']:
+            headers = ['Display Name', 'Address', 'Created on', 'User ID']
+
+        if args['list_name']:
+            users = self.get_users(args['list_name'])
+        elif users_ext:
+            users = users_ext
+        else:
+            users = self.client.users
+
+        table = utils.get_listing(users, fields)
+
         if args['csv']:
             utils.write_csv(table, headers, args['csv'])
         else:
             print tabulate(table, headers=headers, tablefmt='plain')
+
+    def get_users(self, listname):
+        users = []
+        _list = self.client.get_list(listname)
+        for member in _list.members:
+            users.append(member.user)
+        return users
 
     def describe(self, args):
         ''' Describes a user object '''
