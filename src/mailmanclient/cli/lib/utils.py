@@ -47,7 +47,7 @@ class Utils():
         sys.stderr.write((self.ERROR + '\n') % message)
 
     def confirm(self, message):
-        print self.CONFIRM % message
+        print self.CONFIRM % message,
 
     def emphasize(self, message):
         print self.EMPHASIZE % message
@@ -62,10 +62,9 @@ class Utils():
         :param length: Length of the random string to be returned
         :type length: int
         """
-        try:
-            return sha1(str(datetime.now())).hexdigest()[:length]
-        except IndexError:
+        if length > 40:
             raise Exception('Specify length less than 40')
+        return sha1(str(datetime.now())).hexdigest()[:length]
 
     def set_table_section_heading(self, table, heading):
         table.append(['', ''])
@@ -75,8 +74,10 @@ class Utils():
     def write_csv(self, table, headers, filename):
         if table == []:
             return
+
         if 'csv' not in filename:
             filename += '.csv'
+
         f = open(filename, 'wb')
         writer = csv.writer(f, quoting=csv.QUOTE_ALL)
         if headers:
@@ -84,6 +85,7 @@ class Utils():
         for row in table:
             writer.writerow(row)
         f.close()
+
         return
 
     def stem(self, arguments):
@@ -102,21 +104,20 @@ class Utils():
         table = []
         for obj in objects:
             row = []
-            try:
-                for field in fields:
+            for field in fields:
+                try:
                     value = getattr(obj, field)
-                    t = type(value).__name__
-                    if t == 'str':
-                        row.append(value)
-                    elif t == '_Addresses':
-                        row.append(str(value[0]))
-                    else:
-                        row.append(str(value))
-                table.append(row)
-            except:
-                pass
-        return table
+                except:
+                    value = 'None'
 
+                _type = type(value).__name__
+                if _type == '_Addresses':
+                    row.append(str(value[0]))
+                else:
+                    row.append(str(value))
+
+            table.append(row)
+        return table
 
 class Filter():
 
@@ -147,54 +148,52 @@ class Filter():
         flag = False
         for i in data_set:
             try:
-                try:
-                    the_list = getattr(i, key)
-                except KeyError:
-                    copy_set.remove(i)
-                    continue
-                if key == 'members':
-                    for j in the_list:
-                        if self.match_pattern(j.email, value):
-                            flag = True
-                            break
-                elif key == 'lists':
-                    for j in the_list:
-                        if (self.match_pattern(j.list_id, value)
-                           or self.match_pattern(j.fqdn_listname, value)):
-                            flag = True
-                            break
-                elif key == 'subscriptions':
-                    value = value.replace('@', '.')
-                    for j in the_list:
-                        if self.match_pattern(j.list_id, value):
-                            flag = True
-                            break
-                else:
-                    for j in the_list:
-                        if self.match_pattern(j, value):
-                            flag = True
-                            break
-                if not flag:
-                    copy_set.remove(i)
-                flag = False
+                the_list = getattr(i, key)
+            except KeyError:
+                copy_set.remove(i)
+                continue
             except AttributeError:
                 raise Exception('Invalid filter : %s' % key)
+
+            if key == 'members':
+                for j in the_list:
+                    if self.match_pattern(j.email, value):
+                        flag = True
+                        break
+            elif key == 'lists':
+                for j in the_list:
+                    if (self.match_pattern(j.list_id, value)
+                       or self.match_pattern(j.fqdn_listname, value)):
+                        flag = True
+                        break
+            elif key == 'subscriptions':
+                value = value.replace('@', '.')
+                for j in the_list:
+                    if self.match_pattern(j.list_id, value):
+                        flag = True
+                        break
+            else:
+                 for j in the_list:
+                    if self.match_pattern(j, value):
+                        flag = True
+                        break
+            if not flag:
+                copy_set.remove(i)
+            flag = False
         return copy_set
 
     def like(self, key, value, op, data_set):
         copy_set = data_set[:]
         for i in data_set:
+            obj_value = None
             try:
-                obj_value = None
-                try:
-                    obj_value = getattr(i, key)
-                except KeyError:
-                    copy_set.remove(i)
-                if not self.match_pattern(obj_value, value):
-                    copy_set.remove(i)
+                obj_value = getattr(i, key)
+            except KeyError:
+                copy_set.remove(i)
             except AttributeError:
-                if key not in ['domain', 'user', 'list']:
-                    raise Exception('Invalid filter : %s' % key)
+                raise Exception('Invalid filter : %s' % key)
+            if not self.match_pattern(obj_value, value):
+                copy_set.remove(i)
         return copy_set
 
     def match_pattern(self, string, value):

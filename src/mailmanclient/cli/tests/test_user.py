@@ -106,7 +106,7 @@ class TestSubscription(unittest.TestCase):
         _list = self.client.get_list(self.test_list)
         nmembers = len(_list.members)
         args = {}
-        args['users'] = ['a@b.com', 'b@c.com', 'd@e.com']
+        args['users'] = ['a2b@b.com', 'ab4@c.com', 'a8d@e.com']
         self.new_users.extend(args['users'])
         args['list_name'] = self.test_list
         args['quiet'] = False

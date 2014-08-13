@@ -55,8 +55,12 @@ class Users():
             self.client.create_user(email=email,
                                     password=password,
                                     display_name=display_name)
-        except HTTPError:
-            raise UserException('User already exists')
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 400:
+                raise UserException('User already exists')
+            else:
+                raise UserException('An unknown HTTPError has occured')
 
     def show(self, args, users_ext=None):
         """List users in the system.
@@ -102,10 +106,7 @@ class Users():
 
     def describe(self, args):
         ''' Describes a user object '''
-        try:
-            user = self.client.get_user(args['user'])
-        except HTTPError:
-            raise UserException('User not found')
+        user = self.get_user(args['user'])
         table = []
         table.append(['User ID', user.user_id])
         table.append(['Display Name', user.display_name])
@@ -127,10 +128,7 @@ class Users():
 
     def delete(self, args):
         ''' Deletes a User object '''
-        try:
-            user = self.client.get_user(args['user'])
-        except HTTPError:
-            raise UserException('User not found')
+        user = self.client.get_user(args['user'])
         if not args['yes']:
             utils.confirm('Delete user %s?[y/n]' % args['user'])
             confirm = raw_input()
@@ -146,13 +144,10 @@ class Users():
         ''' Subsribes a user or a list of users to a list '''
         list_name = args['list_name']
         emails = args['users']
-        try:
-            user = self.client.get_list(list_name)
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.client.get_list(list_name)
         for i in emails:
             try:
-                user.subscribe(i)
+                _list.subscribe(i)
                 if not args['quiet']:
                     utils.warn('%s subscribed to %s' % (i, list_name))
             except Exception as e:
@@ -163,15 +158,31 @@ class Users():
         ''' Unsubsribes a user or a list of users from a list '''
         list_name = args['list_name']
         emails = args['users']
-        try:
-            user = self.client.get_list(list_name)
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.client.get_list(list_name)
         for i in emails:
             try:
-                user.unsubscribe(i)
+                _list.unsubscribe(i)
                 if not args['quiet']:
                     utils.warn('%s unsubscribed from %s' % (i, list_name))
             except Exception as e:
                 if not args['quiet']:
                     utils.error('Failed to unsubscribe %s : %s' % (i, e))
+    
+    def get_list(self, listname):
+        try:
+            return self.client.get_list(listname)
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 404:
+                raise ListException('List not found')
+            else:
+                raise ListException('An unknown HTTPError has occured')
+    def get_user(self, username):
+        try:
+            return self.client.get_user(username)
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 404:
+                raise UserException('User not found')
+            else:
+                raise UserException('An unknown HTTPError has occured')

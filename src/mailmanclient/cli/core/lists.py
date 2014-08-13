@@ -50,21 +50,26 @@ class Lists():
            :type args: dictionary
         """
         name = args['list'].split('@')
+
         try:
             list_name = name[0]
             domain_name = name[1]
         except IndexError:
             raise ListException('Invalid FQDN list name')
+
         if list_name.strip() == '' or domain_name.strip() == '':
             raise ListException('Invalid FQDN list name')
-        try:
-            domain = self.client.get_domain(domain_name)
-        except HTTPError:
-            raise DomainException('Domain not found')
+
+        domain = self.get_domain(domain_name)
+
         try:
             domain.create_list(list_name)
-        except HTTPError:
-            raise ListException('List already exists')
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 400:
+                raise ListException('List already exists')
+            else:
+                raise Exception('An unknown HTTPError has occoured')
 
     def show(self, args, lists_ext=None):
         """List the mailing lists in the system or under a domain.
@@ -81,7 +86,7 @@ class Lists():
         headers = []
 
         if args['domain']:
-            domain = self.client.get_domain(args['domain'])
+            domain = self.get_domain(args['domain'])
             lists = domain.lists
         elif lists_ext:
             lists = lists_ext
@@ -104,10 +109,7 @@ class Lists():
             print tabulate(table, headers=headers, tablefmt='plain')
 
     def describe(self, args):
-        try:
-            _list = self.client.get_list(args['list'])
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.get_list(args['list'])
         table = []
         table.append(['List ID', _list.list_id])
         table.append(['List name', _list.list_name])
@@ -128,10 +130,7 @@ class Lists():
         print tabulate(table, tablefmt='plain')
 
     def add_moderator(self, args):
-        try:
-            _list = self.client.get_list(args['list'])
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.get_list(args['list'])
         users = args['users']
         quiet = args['quiet']
         for user in users:
@@ -145,10 +144,7 @@ class Lists():
                                 (user, e))
 
     def add_owner(self, args):
-        try:
-            _list = self.client.get_list(args['list'])
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.get_list(args['list'])
         users = args['users']
         quiet = args['quiet']
         for user in users:
@@ -162,10 +158,7 @@ class Lists():
                                 (user, e))
 
     def remove_moderator(self, args):
-        try:
-            _list = self.client.get_list(args['list'])
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.get_list(args['list'])
         users = args['users']
         quiet = args['quiet']
         for user in users:
@@ -179,10 +172,7 @@ class Lists():
                                 (user, e))
 
     def remove_owner(self, args):
-        try:
-            _list = self.client.get_list(args['list'])
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.get_list(args['list'])
         users = args['users']
         quiet = args['quiet']
         for user in users:
@@ -203,10 +193,7 @@ class Lists():
         users.show(args)
 
     def delete(self, args):
-        try:
-            _list = self.client.get_list(args['list'])
-        except HTTPError:
-            raise ListException('List not found')
+        _list = self.get_list(args['list'])
         if not args['yes']:
             utils.confirm('List %s has %d members.Delete?[y/n]'
                           % (args['list'], len(_list.members)))
@@ -218,3 +205,23 @@ class Lists():
             else:
                 raise Exception('Invalid Answer')
         _list.delete()
+
+    def get_list(self, listname):
+        try:
+            return self.client.get_list(listname)
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 404:
+                raise ListException('List not found')
+            else:
+                raise Exception('An unknown HTTPError has occoured')
+
+    def get_domain(self, domainname):
+        try:
+            return self.client.get_domain(domainname)
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 404:
+                raise DomainException('Domain not found')
+            else:
+                raise Exception('An unknown HTTPError has occoured')

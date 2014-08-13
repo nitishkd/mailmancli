@@ -28,6 +28,8 @@ from mailmanclient.cli.lib.utils import Utils
 from mailmanclient.cli.client.shell import Shell
 from mailmanclient.cli.client.cmdparser import CmdParser
 try:
+    # If the mmclient is invoked with arguments, trigger the command
+    # line tools, else trigger the commandline shell
     sys.argv[1]
     utils = Utils()
     arguments = None
@@ -38,6 +40,7 @@ try:
     c = CmdParser(arguments)
     c.run()
 except IndexError:
+    # No arguments supplied.Start the shell.
     s = Shell()
     s.initialize()
     s.cmdloop()

@@ -50,9 +50,9 @@ class Shell(Cmd):
         return Cmd.parseline(self, line)
 
     def onecmd(self, s):
-        """ This method overided the Cmd.onecmd method, but eventully
+        """ This method overides the Cmd.onecmd method, but eventully
             calls the Cmd.onecmd function. The purpose of this function
-            is to catch the errors at a single point, rather that all
+            is to catch the errors at a single point, rather than all
             over the code.
         """
         try:

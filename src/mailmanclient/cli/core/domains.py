@@ -51,13 +51,14 @@ class Domains():
         contact_address = args['contact']
 
         try:
-            if contact_address is None:
-                self.client.create_domain(domain_name)
+            self.client.create_domain(domain_name,
+                                      contact_address=contact_address)
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 400:
+                raise DomainException('Domain already exists')
             else:
-                self.client.create_domain(domain_name,
-                                          contact_address=contact_address)
-        except HTTPError:
-            raise DomainException('Domain already exists')
+                raise DomainException('An unknown HTTPError has occured')
 
     def show(self, args, domains_ext=None):
         """List the domains in the system.
@@ -95,8 +96,12 @@ class Domains():
     def describe(self, args):
         try:
             domain = self.client.get_domain(args['domain'])
-        except HTTPError:
-            raise DomainException('Domain not found')
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 404:
+                raise DomainException('Domain not found')
+            else:
+                raise DomainException('An unknown HTTPError has occured')
         table = []
         table.append(['Base URL', domain.base_url])
         table.append(['Contact Address', domain.contact_address])
@@ -112,8 +117,12 @@ class Domains():
     def delete(self, args):
         try:
             domain = self.client.get_domain(args['domain'])
-        except HTTPError:
-            raise DomainException('Domain not found')
+        except HTTPError as e:
+            code = e.getcode()
+            if code == 404:
+                raise DomainException('Domain not found')
+            else:
+                raise DomainException('An unknown HTTPError has occured')
         if not args['yes']:
             utils.confirm('Domain `%s` has %d lists.Delete?[y/n]'
                           % (args['domain'], len(domain.lists)))

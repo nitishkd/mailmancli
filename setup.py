@@ -21,17 +21,9 @@ distribute_setup.use_setuptools()
 from setup_helpers import (
     description, find_doctests, get_version, long_description, require_python)
 from setuptools import setup, find_packages
-from string import Template
 
 require_python(0x20600f0)
 __version__ = get_version('src/mailmanclient/__init__.py')
-
-template = Template('$script = mailmanclient.cli.$script')
-scripts = set(
-    template.substitute(script=script)
-    for script in ['mmclient']
-    )
-
 
 setup(
     name='mailmanclient',

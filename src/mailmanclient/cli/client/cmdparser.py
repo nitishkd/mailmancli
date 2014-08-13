@@ -330,7 +330,6 @@ class CmdParser():
         action_backup.add_argument('backup',
                                    help='Specify backup file location')
         # Global options
-        host, port, username, password = utils.get_credentials_from_config()
         parser.add_argument('--host', help='REST API host address')
         parser.add_argument('--port', help='REST API host port')
         parser.add_argument('--restuser', help='REST API username')
