@@ -167,7 +167,7 @@ class Users():
             except Exception as e:
                 if not args['quiet']:
                     utils.error('Failed to unsubscribe %s : %s' % (i, e))
-    
+
     def get_list(self, listname):
         try:
             return self.client.get_list(listname)
@@ -177,6 +177,7 @@ class Users():
                 raise ListException('List not found')
             else:
                 raise ListException('An unknown HTTPError has occured')
+
     def get_user(self, username):
         try:
             return self.client.get_user(username)

@@ -101,6 +101,8 @@ class Utils():
         return arguments
 
     def get_listing(self, objects, fields):
+        """ Tabulates the set of objects by using the values of each of the
+            fileds. """
         table = []
         for obj in objects:
             row = []
@@ -119,7 +121,12 @@ class Utils():
             table.append(row)
         return table
 
+
 class Filter():
+    """ This class manages the filtering tasks for the show and delete commands
+        The class supports three filters, equality, regular expression search
+        and list search.
+    """
 
     def get_results(self, *args):
         op = args[2]
@@ -173,7 +180,7 @@ class Filter():
                         flag = True
                         break
             else:
-                 for j in the_list:
+                for j in the_list:
                     if self.match_pattern(j, value):
                         flag = True
                         break
@@ -197,6 +204,9 @@ class Filter():
         return copy_set
 
     def match_pattern(self, string, value):
+        """ Regular expression matcher, returns the match object
+            or None
+        """
         pattern = None
         try:
             pattern = re.compile(value.lower())

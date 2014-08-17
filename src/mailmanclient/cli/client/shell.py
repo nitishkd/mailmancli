@@ -100,7 +100,7 @@ class Shell(Cmd):
         exit(0)
 
     def do_set(self, args):
-        """Sets a variable in the environment
+        """ Sets a variable in the environment
  Usage:
   set `<variable>` = `<value>`
         """
@@ -113,7 +113,7 @@ class Shell(Cmd):
         utils.warn('`%s` set to value `%s`' % (key, value))
 
     def do_unset(self, args):
-        """Delete a shell environment variable
+        """ Delete a shell environment variable
  Usage:
   unset `<var_name>`"""
         from mailmanclient.cli.client.parsers.unset import Unset
@@ -127,7 +127,7 @@ class Shell(Cmd):
             raise Exception('Invalid Argument `%s`' % key)
 
     def do_show_var(self, args):
-        """Show a shell environment variable
+        """ Show a shell environment variable
  Usage:
   show_var `<var_name>`"""
         from mailmanclient.cli.client.parsers.show_var import ShowVar
@@ -140,7 +140,7 @@ class Shell(Cmd):
             raise Exception('Invalid Argument %s' % key)
 
     def do_disable(self, args):
-        """Disable the shell environment
+        """ Disable the shell environment
  Usage:
   disable env"""
         from mailmanclient.cli.client.parsers.disable import Disable
@@ -150,7 +150,7 @@ class Shell(Cmd):
         utils.emphasize('Environment variables disabled')
 
     def do_enable(self, args):
-        """Enable the shell environment
+        """ Enable the shell environment
  Usage:
   enable env"""
         from mailmanclient.cli.client.parsers.enable import Enable
@@ -160,7 +160,7 @@ class Shell(Cmd):
         utils.emphasize('Environment variables enabled')
 
     def do_show(self, args):
-        """Show requested mailman objects as a table
+        """ Show requested mailman objects as a table
  Usage:
   show {domain|user|list} where `<object_attribute>` = `<value>`
   show {domain|user|list} where `<object_attribute>` like `<regex>`
@@ -201,7 +201,7 @@ class Shell(Cmd):
         scope_object.show(cmd_arguments, filtered_list)
 
     def do_create(self, args):
-        """Creates mailman Objects
+        """ Creates mailman Objects
  Usage:
   create user with `email`=`EMAIL` and `password`=`PASSWD` and `name`=`NAME`
   create domain with `name`=`DOMAIN` and `contact`=`CONTACT`
@@ -237,7 +237,7 @@ class Shell(Cmd):
         self.refresh_lists()
 
     def do_delete(self, args):
-        """Delete specified mailman objects
+        """ Delete specified mailman objects
  Usage:
   delete {domain|user|list} where `<object_attribute>` = `<value>`
   delete {domain|user|list} where `<object_attribute>` like `<regex>`
@@ -272,7 +272,7 @@ class Shell(Cmd):
             self.refresh_lists()
 
     def do_subscribe(self, args):
-        """Subscribes users to a list
+        """ Subscribes users to a list
  Usage:
   subscribe users `<email1>` `<email2>` ... to `<list fqdn_name>`"""
         from mailmanclient.cli.client.parsers.subscribe import Subscribe
@@ -315,7 +315,7 @@ class Shell(Cmd):
         self.refresh_lists()
 
     def do_update(self, args):
-        """Command to set preferences
+        """ Command to set preferences
  Usage:
    update preference `<preference_name>` to `<value>` globally
 

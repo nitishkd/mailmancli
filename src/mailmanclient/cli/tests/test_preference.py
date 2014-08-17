@@ -24,11 +24,12 @@
 #               Barry Warsaw <barry@list.org>
 
 import unittest
-from mailmanclient.cli.core.users import Users, UserException
 from mailmanclient.cli.lib.mailman_utils import MailmanUtils
 
 
 utils = MailmanUtils()
+
+
 class TestUpdate(unittest.TestCase):
 
     new_objects = []
@@ -42,8 +43,8 @@ class TestUpdate(unittest.TestCase):
     def setUp(self):
         self.client = utils.connect()
         self.test_user = 'a@' + utils.get_random_string(5) + '.com'
-        self.test_user = self.client.create_user(self.test_user, display_name = 'a',
-                                password='a')
+        self.test_user = self.client.create_user(self.test_user, display_name='a',
+                                                 password='a')
         self.new_objects.append(self.test_user)
 
         self.test_domain = self.client.create_domain(utils.get_random_string(5)
@@ -87,7 +88,7 @@ class TestUpdate(unittest.TestCase):
     def tearDown(self):
         for obj in self.new_objects:
             try:
-                if type(obj).__name__ == '_Domain': 
+                if type(obj).__name__ == '_Domain':
                     self.client.delete_domain(obj.base_url)
                 else:
                     obj.delete()

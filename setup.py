@@ -34,9 +34,8 @@ setup(
     scripts=['src/mailmanclient/cli/mmclient'],
     maintainer='Barry Warsaw',
     maintainer_email='barry@list.org',
-    description=description('README.txt'),
     long_description=long_description(
-        'src/mailmanclient/README.txt',
+        'README.txt',
         'src/mailmanclient/NEWS.txt'),
     license='LGPLv3',
     url='http://launchpad.net/mailman.client',

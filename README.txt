@@ -1,4 +1,9 @@
-Python bindings for the Mailman 3 REST API.
+===========================================================
+mailman.client - Python bindings for the Mailman 3 REST API
+===========================================================
+
+This package is called ``mailman.client``. 
+
 
 ..
     This file is part of mailman.client.
@@ -41,13 +46,22 @@ Project details
 You may download the latest version of the package from the Python
 `Cheese Shop`_ or from Launchpad_.
 
-You can also install it via ``easy_install`` or ``pip``.
+You can also install it via ``easy_install`` or ``pip``.::
 
     % sudo easy_install mailman.client
     % sudo pip install mailman.client
 
 See the Launchpad project page for access to the Bazaar branch, bug report,
 etc.
+
+Documentation
+=============
+
+A `simple guide`_ to using the library is available within this package, in
+the form of doctests.   The manual is also available online in the Cheeseshop
+at:
+
+    http://package.python.org/mailman.client
 
 
 Acknowledgements
@@ -58,3 +72,17 @@ Many thanks to Florian Fuchs for his contribution of an initial REST client.
 
 .. _`Cheese Shop`: http://pypi.python.org/mailman.client
 .. _Launchpad: https://launchpad.net/mailman.client
+
+Table of Contents
+=================
+
+.. toctree::
+
+    src/mailmanclient/docs/using.txt
+    src/mailmanclient/cli/docs/using_cli_shell.txt
+    src/mailmanclient/cli/docs/using_cli_tools.txt
+    src/mailmanclient/cli/docs/writing_a_new_command.txt
+    src/mailmanclient/cli/client/parsers/README.txt
+    src/mailmanclient/NEWS.txt
+
+.. _`simple guide`: docs/using.html

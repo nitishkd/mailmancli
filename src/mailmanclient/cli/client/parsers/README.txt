@@ -1,5 +1,5 @@
 Mailman Shell Parsers
-=====================
+**********************
 
 This directory consists of the various parsers that
 have been built for use with the mailman shell. The shell
@@ -8,155 +8,183 @@ a different and independent parser, so that adding new commands
 can be done flexibly and easily, without worrying about the
 existing code.
 
-Here is the list of commands along with the grammars used for 
-parsing them
+The `show` command
+=================
 
-====
-show
-====
+The command to display the mailman objects
 
 Tokens
 ------
-SHOW   : 'show'
-SCOPE  : '(user|domain|list)s?'
-WHERE  : 'where'
-OP     : '=|in|like'
-AND    : 'and'
-STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+::
+
+    SHOW   : 'show'
+    SCOPE  : '(user|domain|list)s?'
+    WHERE  : 'where'
+    OP     : '=|in|like'
+    AND    : 'and'
+    STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
 
 Grammar
 -------
+::
 
-S : SHOW SCOPE FILTER ;
-FILTER : WHERE EXP | ;
-EXP : STRING OP STRING CONJ ;
-CONJ : AND EXP | ;
+    S : SHOW SCOPE FILTER ;
+    FILTER : WHERE EXP | ;
+    EXP : STRING OP STRING CONJ ;
+    CONJ : AND EXP | ;
 
-======
-Create
-=======
+The `create` command
+====================
+
+The commands to create mailman objects
 
 Tokens
 ------
-CREATE : 'create'
-SCOPE  : 'user|domain|list'
-WITH   : 'with'
-AND    : 'and'
-STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+::
+
+    CREATE : 'create'
+    SCOPE  : 'user|domain|list'
+    WITH   : 'with'
+    AND    : 'and'
+    STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
 
 Grammar
 -------
+::
 
-S : CREATE SCOPE WITH EXP ;
-EXP : STRING "=" STRING CONJ ;
-CONJ : AND EXP | ;
+    S : CREATE SCOPE WITH EXP ;
+    EXP : STRING "=" STRING CONJ ;
+    CONJ : AND EXP | ;
 
-=======
-delete
-=======
+The `delete` command
+====================
+
+The commands to delete mailman objects
 
 Tokens
 ------
-DELETE : 'delete'
-SCOPE  : '(user|domain|list)s?'
-WHERE  : 'where'
-OP     : '=|in|like'
-AND    : 'and'
-STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+::
+
+    DELETE : 'delete'
+    SCOPE  : '(user|domain|list)s?'
+    WHERE  : 'where'
+    OP     : '=|in|like'
+    AND    : 'and'
+    STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
 
 Grammar
 -------
+::
 
-S : DELETE SCOPE FILTER ;
-FILTER : WHERE EXP | ;
-EXP : STRING OP STRING CONJ ;
-CONJ : AND EXP | ;
+    S : DELETE SCOPE FILTER ;
+    FILTER : WHERE EXP | ;
+    EXP : STRING OP STRING CONJ ;
+    CONJ : AND EXP | ;
 
-=========
-subscribe
-=========
+The `subscribe` Command
+=====================
+
+The commands to subscribe a list of users to a mailing lists
 
 Tokens
 ------
-SUBSCRIBE  : 'subscribe'
-USER       : '(user)?'
-TO         : 'to'
-STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+::
+
+    SUBSCRIBE  : 'subscribe'
+    USER       : '(user)?'
+    TO         : 'to'
+    STRING : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
 
 Grammar
 -------
+::
 
-S : SUBSCRIBE USER USERLIST TO STRING ;
-USERLIST : STRING NEXT ;
-NEXT : USERLIST | ;
+    S : SUBSCRIBE USER USERLIST TO STRING ;
+    USERLIST : STRING NEXT ;
+    NEXT : USERLIST | ;
 
+The `unsubscribe` Command
+=========================
 
-=============
-unsubscribe
-=============
+The commands to unsubscribe a list of users from a mailing lists
 
 Tokens
 ------
-UNSUBSCRIBE : 'unsubscribe'
-USER        : '(user)?'
-FROM        : 'from'
-STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+::
+
+    UNSUBSCRIBE : 'unsubscribe'
+    USER        : '(user)?'
+    FROM        : 'from'
+    STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
 
 Grammar
 -------
+::
 
-S : UNSUBSCRIBE USER USERLIST TO STRING ;
-USERLIST : STRING NEXT ;
-NEXT : USERLIST | ;
+    S : UNSUBSCRIBE USER USERLIST TO STRING ;
+    USERLIST : STRING NEXT ;
+    NEXT : USERLIST | ;
 
-======
-unset
-======
+The `unset` command
+===================
+
+Command to unset a shell variable
 
 Tokens
 ------
-UNSET : 'unset'
-STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+::
+
+    UNSET : 'unset'
+    STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
 
 Grammar
 -------
+::
 
-S : UNSET STRING ;
+    S : UNSET STRING ;
 
-====
-set
-====
+The `set` Command
+=================
+
+Command to set a shell variable
 
 Tokens
 ------
-SET : 'set'
-STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+::
+
+    SET : 'set'
+    STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
 
 Grammar
 -------
+::
 
-S : SET STRING "=" STRING ;
+    S : SET STRING "=" STRING ;
 
-=======
-update
-=======
+The `update` command
+====================
+
+Command to update a preference
 
 Tokens
 ------
+::
 
-UPDATE      : 'update'
-PREFERENCE  : 'preference'
-STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
-TO          : 'to'
-WITH        : 'with'
-AND         : 'and'
-FOR         : 'for'
-GLOBALLY    : 'globally'
-DOMAIN      : 'user|address|member'
+    UPDATE      : 'update'
+    PREFERENCE  : 'preference'
+    STRING      : '`([a-zA-Z0-9_@\.\*\-\$ ]*)`'
+    TO          : 'to'
+    WITH        : 'with'
+    AND         : 'and'
+    FOR         : 'for'
+    GLOBALLY    : 'globally'
+    DOMAIN      : 'user|address|member'
 
 Grammar
 -------
-S : UPDATE PREFERENCE STRING TO STRING E ;
-E : GLOBALLY | FOR DOMAIN WITH EXP ;
-EXP : STRING "=" STRING CONJ ;
-CONJ : AND EXP | ;
+::
+
+    S : UPDATE PREFERENCE STRING TO STRING E ;
+    E : GLOBALLY | FOR DOMAIN WITH EXP ;
+    EXP : STRING "=" STRING CONJ ;
+    CONJ : AND EXP | ;

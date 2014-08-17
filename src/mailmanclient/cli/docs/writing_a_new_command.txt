@@ -1,9 +1,57 @@
+Writing a new command
+*********************
+
+There are two types of commands in the CLI project, either add a new command
+to the CLI tools, that gives a normal terminal command, or build a command
+for the Mailman custom shell.
+
 Writing a new command for Command tools
 =======================================
 
-:TODO:
+To write a new command for the command line tools, the following
+steps are to be followed.
+
+- Decide a command name and arguments expected
+- Decide whether the command comes under a scope. Currently
+the following scopes are supported
+
+    - users
+    - domains
+    - preferences
+    - lists
+
+The new command can either be under any of these scopes or
+can exist independently without a scope.
+
+- If the new command BAR is to be added to an existing scope ``FOO``,
+  the command would look like ``FOO BAR``, where ``FOO`` is the action and
+  BAR is the scope
+- Add a new parser to the `action` parser as::
+    
+   new_cmd = action.add_parser('FOO')
+
+  Add the scope as follows::
+
+   scope = new_cmd.add_subparser(dest='scope')
+   FOO_BAR = scope.add_parser('BAR')
+
+- Add the arguments as follows::
+
+   FOO_BAR.add_argument('-x','--xxxx',help='<help text>',[required=True/False])
+
+- Add the action method in the ``core/bar.py`` file, to the Bar class. In effect, the action
+  method would be ``core.bar.Bar.action``. Note that the function name must be same as the 
+  action name
+
+- If there is no specific scope, skip the scope parser and add the action the Misc class 
+  under ``core/misc.py``. The action would be ``core.misc.Misc.action``
 
 Writing a new command for the Shell
 ===================================
 
-:TODO:
+To write a new shell command, first add a new parser for the command to the ``client/parsers`` directory.
+
+Add the command method to the ``client/shell.py``
+
+Import the parser in the corresponding method and parse the user input, present in the ``self.line`` attribute
+to obtain the arguments. Perform the action.
