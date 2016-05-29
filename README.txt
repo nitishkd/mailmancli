@@ -48,8 +48,8 @@ You may download the latest version of the package from the Python
 
 You can also install it via ``easy_install`` or ``pip``.::
 
-    % sudo easy_install mailman.client
-    % sudo pip install mailman.client
+    % sudo easy_install mailmanclient
+    % sudo pip install mailmanclient
 
 See the Launchpad project page for access to the Bazaar branch, bug report,
 etc.
